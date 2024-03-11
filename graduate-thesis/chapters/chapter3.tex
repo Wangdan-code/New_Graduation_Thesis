@@ -1,0 +1,148 @@
+\chapter{基于预训练辅助模型的Token表征学习}
+本章主要对本文提出的基于预训练辅助模型的Token表征学习方法进行详细介绍，首先介绍其基本思想，接着阐述其方法设计，以及具体的实现过程，最后介绍实验验证过程和结果。
+\section{研究动机}
+
+本文针对现有存在的问题，
+
+基于Token的代码表征通常利用词法分析器将代码中的词汇单元（Token）划分出来。这些词汇单元通常包含关键字、数字、标识符等。将代码表示为词汇单元序列之后，利用深度学习技术对其进行建模，学习代码序列中所包含的有效信息，如功能语义信息、语法结构信息等，最后生成具有丰富代码信息的表征向量，应用于后续的代码克隆检测任务中。现有方法大多都对token进行了规范化，比如将变量名用统一的标识符来代替，这样存在的问题是会丢失部分词法信息，但是如果不进行规范化，会存在集外词（Out-of-vocabulary，简称OOV）的问题，即出现了在词汇表中不存在的token。集外词OOV问题严重限制了代码表示的有效性。
+
+针对上述问题，本文采用预训练增强的辅助模型得到词汇表，从而提高代码克隆检测的准确率。
+\section{方法设计}
+
+本节将主要介绍基于预训练辅助模型的Token表征学习方法设计与实现，首先介绍该方法的整体框架，并分别从预训练辅助模型、Token表征学习的具体设计及实现。
+
+\subsection{框架概述}
+基于预训练辅助模型的Token表征学习：
+
+\subsection{预训练辅助模型}
+Word2vec模型 多次迭代维护词汇表，从而减少OOV问题
+
+在模型训练之前，通过选取合适的模型从代码语料库中学习基本单元的语法语义信息，以及这些单元之间的联系，最终给出一份单词-向量形式的词汇表，从而减少出现集外词问题的概率。具体的，第一次迭代选择相邻的两个token组合为一个单元，查找出最频繁的token组合确定为一个组合单元，并将组合单元更新到词汇表中，然后二次迭代，每次迭代在原来的基本单元上再组合一个新的邻近token作为新的判断单元，每次迭代都会更新词汇表。在得到词汇表之后，根据词汇表获取每个单元的向量表示。
+\subsection{Token表征学习}
+采用BiLST模型
+
+将token序列对应的向量输入到Bi LSTM网络中，经过Bi LSTM学习哪些信息应该被记住哪些信息应该被遗忘，最终得到每个基本单元包含语义信息和上下文信息的向量表示。Bi LSTM由一个正向的LSTM和一个反向的LSTM组成，主要思想是通过把序列向前、向后分别输入给两个独立的递归网络，这两个子网络连接到一个输出层，在每个词的输出部分把两个子网络的输出信息进行整合，这样网络就同时拥有了序列中每个词的过去时刻信息和未来时刻信息。Bi LSTM可以捕获到序列前后的关系依赖，将代码片段的Token序列转换为可相互比较的向量。
+\section{实验验证}
+为了验证基于预训练辅助模型的Token表征方法的有效性，
+
+\subsection{实验设计}
+（1）实验环境
+本章的实验验证均运行于Linux系统下，其系统硬件配置如表\ref{tab:environment}所示。
+
+\begin{table}
+  \centering
+  \caption{实验环境配置} 
+  \label{tab:environment}
+  \begin{tabular*}{0.5\textwidth}{@{\extracolsep{\fill}}cc}
+  \toprule
+    环境			&配置		\\
+  \midrule
+    操作系统		&Ubuntu 20.04 \\
+    处理器			&Intel Core i9-12900KF × 24 \\
+    内存			  &31.1G \\
+    显卡			  &NVIDIA  \\
+    磁盘			  &1TB \\
+  \bottomrule
+  \end{tabular*}
+\end{table}
+
+（2）实验数据集
+
+为了验证预训练辅助模型在Token层面上表征学习的有效性，本文面向代码克隆检测任务对预训练辅助模型进行分析和评估，选取的实验数据为POJ104数据集。如表\ref{tab：dataset}所示，POJ104数据集是一个基于C语言所构建的大型数据集。OJ系统是一个以编程教学为目的公开评判系统，共存在104个编程问题，针对每个编程问题，学生们通过在线提交自己的代码来尝试解决，同时OJ系统将自动判断提交源代码的正确性和有效性。对于OJ系统中同一个编程问题来说，其所有正确提交的代码都为克隆代码，对于不同的编程问题所提交的代码，即为非克隆代码。POJ104数据集针对每一个编程问题，均提供500个学生提交源代码，即共有52000个样本。
+
+\begin{table}
+  \centering
+  \caption{POJ104数据集} 
+  \label{tab：dataset}
+  \begin{tabular*}{0.5\textwidth}{@{\extracolsep{\fill}}cc}
+  \toprule
+    代码			&属性		\\
+  \midrule
+    Dataset			&POJ104数据集 \\
+    Language    &C \\
+    Program			&52000 \\
+    Classes			&104 \\
+    Max tokens			&8737 \\
+    Avg tokens			&245 \\
+  \bottomrule
+  \end{tabular*}
+\end{table}
+
+得到POJ104数据集后，本文首先对数据集进行初步筛选，去掉其中包含乱码的样本，共得到51485个源代码样本。然后对源代码进行预处理，删除样本中包含的空白行和注释等多余代码，并将数据集保存到一个program.pkl文件中，program.pkl文件中一共包含51485行×3列的数据集，每一行数据代表一个源代码样本，第一列为源代码id，第二列保存源代码样本code，第三列为源代码的标签label，即属于哪一个编程问题。接着，本文随机两两组合同一标签label的源代码，组成5200个真克隆对，随机组合不同标签的源代码组成44800个假克隆对，一共给包含50000个克隆对，并将其保存到oj\_clone\_ids.pkl文件中，oj\_clone\_ids.pkl文件中一共包含50000行×3列的数据集，每一行数据代表一个克隆对样本，第一列为源代码id1，第二列为源代码id2，第三列为克隆对的标签label，真克隆对标签为1，假克隆对标签为0。最后，依据随机种子将数据集按照3：1：1划分为训练集、测试集、验证集，其中的正负样本数如下表\ref{tab:ClonePairs}所示。
+
+\begin{table}
+  \centering
+  \caption{本文预处理后的POJ104数据集正负样本数} 
+  \label{tab:ClonePairs}
+  \begin{tabular*}{0.8\textwidth}{@{\extracolsep{\fill}}cccc}
+  \toprule
+    数据集			&真克隆对		&假克隆对		&克隆对数 \\
+  \midrule
+    训练集train			&3162	  &26838		&30000 \\
+    测试集test			&1022		&8978		  &10000 \\
+    验证集dev			  &1016		&8984		  &10000 \\
+    总计            &5200	  &44800	  &50000 \\
+  \bottomrule
+  \end{tabular*}
+\end{table}
+
+（3）评估指标
+
+代码克隆检测问题是二分类问题，因此本文采用精确率（Accuracy）、精确率（Precision）、召回率（Recall）、F1值四个评估指标来度量实验结果，其中使用了混淆矩阵中的TP、FN、FP、TN（如表\ref{tab:ConfusionMatrix}）。
+
+\begin{table}
+  \centering
+  \caption{分类问题的混淆矩阵} 
+  \label{tab:ConfusionMatrix}
+  \begin{tabular*}{0.5\textwidth}{@{\extracolsep{\fill}}ccc}
+  \toprule
+  \multirow{2}{*}{实际值} & \multicolumn{2}{c}{预测值} \\
+  \multirow{2}{*}{} & 正样本(P) & 负样本(N) \\
+  \midrule
+    正样本(P)			&TP	  &FN		 \\
+    负样本(N)			&FP		&TN		 \\
+  \bottomrule
+  \end{tabular*}
+\end{table}
+
+准确率(accuracy)=(TP+TN)/(TP+FN+FP+TN)
+
+精确率(precision)=TP/(TP+FP)
+
+召回率(recall)=TP/(TP+FN)
+
+Recall：召回率表示的是样本中的正例中被预测正确的概率。主要由两部分组成，一部分是是把正类预测成正类（TP），另一部分就是把正类预测为负类（FN）。
+Recall = TP
+TP + FN （17）
+
+P和R指标有时候会出现的矛盾的情况，这样就需要综合考虑他们，最常见的方法就是F-Measure。
+
+当参数α=1时，就是最常见的F1，也即
+
+精确率：正确检测到的代码克隆数量占全部预测为代码克隆的比例。
+召回率：正确检测到的代码克隆数量占总体实际代码克隆数量的比例。
+F1：精确率和召回率的加权调和平均，用于评价分类模型的好坏。
+
+
+\subsection{预训练辅助模型消融实验结果}
+消融对比实验：体现改进的辅助模型的有效性，如图\ref{tab:category}
+基于Token的Bi LSTM
+基于Token的+预训练辅助模型的Bi LSTM
+
+
+\begin{table}
+  \centering
+  \caption{预训练辅助模型实验结果} 
+  \label{tab:category}
+  \begin{tabular*}{0.8\textwidth}{@{\extracolsep{\fill}}cccc}
+  \toprule
+    对比			&P		&R		&F1 \\
+  \midrule
+    基于Token的Bi LSTM			&0.xx	&0.xx		&0.xx \\
+    基于Token的+预训练辅助模型的Bi LSTM			&0.xx		&0.xx		&0.xx \\
+  \bottomrule
+  \end{tabular*}
+\end{table}
+
+\section{本章小结}
+本章
