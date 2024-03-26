@@ -27,7 +27,7 @@
 %% 
 \RequirePackage{expl3,l3keys2e}
 \ProvidesExplClass{bithesis}
-{2023-10-24}{3.6.1}{BIT Thesis Templates}
+{2024-03-26}{3.7.1}{BIT Thesis Templates}
 \int_new:N \g__bithesis_thesis_type_int
 \int_new:N \g__bithesis_head_zihao_int
 \bool_new:N \g__bithesis_twoside_bool
@@ -112,6 +112,14 @@
 \cs_new:Npn \smallgap: {
   \hspace{0.45ex}
 }
+\cs_new:Npn \boxcheck:
+{
+  \makebox[1em][l]
+  {
+    \makebox[1pt][l]{$\boxempty$}
+    $\checkmark$
+  }
+}
 \cs_new:Npn \label_space: {
   \__bithesis_if_bachelor_thesis:T {
     \quad
@@ -124,6 +132,9 @@
     {classification} {中图分类号：},
     {classified_level} {密级},
     {type} {种类},
+    {special_type} {特别类型},
+    {cross_research} {交叉研究方向},
+    {international_student_ugp} {政府项目留学生},
   }
   {\__bithesis_define_label:nn #1}
 \clist_map_inline:nn
@@ -184,24 +195,24 @@
 \clist_map_inline:nn
   {
     {originality} {研究成果声明},
-    {originality_clause} {本人郑重声明：
-    所提交的学位论文是我本人在指导教师的指导下进行的研究工作获得的研究成果。
-    尽我所知，文中除特别标注和致谢的地方外，
-    学位论文中不包含其他人已经发表或撰写过的研究成果，
-    也不包含为获得北京理工大学或其它教育机构的学位或证书所使用过的材料。
-    与我一同工作的合作者对此研究工作所做的任何贡献均已在
-    学位论文中作了明确的说明并表示了谢意。\par~特此申明。},
+    {originality_clause} {本人郑重声明：所提交的学位论文是我本人在指导教师的指导下独立完成的研究成果。文中所撰写内容符合以下学术规范（请勾选）：
+\par $\boxcheck:$ 论文综述遵循“适当引用”的规范，全部引用的内容不超过50\%。
+\par 论文中的研究数据及结果不存在篡改、剽窃、抄袭、伪造等学术不端行为，并愿意承担因学术不端行为所带来的一切后果和法律责任。
+\par $\boxcheck:$文中依法引用他人的成果，均已做出明确标注或得到许可。
+\par $\boxcheck:$论文内容未包含法律意义上已属于他人的任何形式的研究成果，也不包含本人已用于其他学位申请的论文或成果。
+\par $\boxcheck:$与本人一同工作的合作者对此研究工作所做的任何贡献均已在学位论文中作了明确的说明并表示了谢意。
+\par~特此声明。},
     {authorization} {关于学位论文使用权的说明},
-    {authorization_clause} {本人完全了解北京理工大学有关保管、使用学位论文的规定，
-    其中包括：\circled{1}~学校有权保管、并向有关部门送交学位论文的原件与复印件；
-    \circled{2}~学校可以采用影印、缩印或其它复制手段复制并保存学位论文；
-    \circled{3}~学校可允许学位论文被查阅或借阅；\circled{4}~
-    学校可以学术交流为目的,复制赠送和交换学位论文；\circled{5}~
-    学校可以公布学位论文的全部或部分内容（保密学位论文在解密后遵守此规定）。},
+    {authorization_clause} {本人完全了解北京理工大学有关保管、使用学位论文的规定，其中包括：
+\par~\circled{1}~学校有权保管、并向有关部门送交学位论文的原件与复印件；
+\par~\circled{2}~学校可以采用影印、缩印或其它复制手段复制并保存学位论文；
+\par~\circled{3}~学校可允许学位论文被查阅或借阅；
+\par~\circled{4}~学校可以学术交流为目的,复制赠送和交换学位论文；
+\par~\circled{5}~学校可以公布学位论文的全部或部分内容（保密学位论文在解密后遵守此规定）。},
     {originality_author_signature}
       {签\qquad 名：\hspace{40mm}日\hspace{2.5mm}期：\hspace{30mm}\quad},
     {originality_supervisor_signature}
-      {指导老师签名：\hspace{40mm}日\hspace{2.5mm}期：\hspace{30mm}\quad},
+      {导师签名：\hspace{40mm}日\hspace{2.5mm}期：\hspace{30mm}\quad},
   } {\__bithesis_define_label_by_thesis_type:nnn {graduate} #1}
 \clist_map_inline:nn
   {
@@ -210,9 +221,9 @@
     {supervisor} {指\quad 导\quad 教\quad 师} {Faculty~Mentor},
     {chairman} {答辩委员会主席} {Chair,~Thesis~Committee},
     {degree}
-      {申\smallgap: 请\smallgap: 学\smallgap: 位\smallgap: 级\smallgap: 别}
+      {申\quad 请\quad 学\quad 位}
       {Degree~Applied},
-    {major} {学\quad 科\quad 专\quad 业} {Major},
+    {major} {学\quad 科\hspace{0.8ex} / \hspace{0.8ex}  类\quad 别} {Major},
     {institute}
       {学\smallgap: 位\smallgap: 授\smallgap: 予\smallgap: 单\smallgap: 位}
       {Degree~by},
@@ -337,8 +348,11 @@
     underlineThickness .initial:n = {1pt},
     underlineOffset .dim_set:N = \l__bithesis_cover_underline_offset_dim,
     underlineOffset .initial:n = { -10pt },
-    hideCoverInPeerReview .bool_set:N = \l__bithesis_style_hide_cover_in_peer_review_bool,
+    hideCoverInPeerReview .bool_set:N = \l__bithesis_cover_hide_cover_in_peer_review_bool,
     hideCoverInPeerReview .initial:n = {false},
+    % 研究生的「特殊类型」
+    showSpecialTypeBox .bool_set:N = \l__bithesis_cover_show_special_type_box_bool,
+    showSpecialTypeBox .initial:n = {false}
   }
 \keys_define:nn { bithesis / info }
   {
@@ -392,6 +406,12 @@
     defenseDateEn .initial:n = {June,~2019~(example)},
     % 因为默认不显示，所以不需要设置初始值。
     classifiedLevel .tl_set:N = \l__bithesis_value_classified_level_tl,
+    % 特别类型-交叉研究方向
+    crossResearch .bool_set:N = \l__bithesis_value_cross_research_bool,
+    crossResearch .initial:n = {false},
+    % 特别类型-政府项目留学生
+    internationalStudentUGP .bool_set:N = \l__bithesis_value_international_student_ugp_bool,
+    internationalStudentUGP .initial:n = {false},
   }
 \keys_define:nn { bithesis / misc }
   {
@@ -601,6 +621,7 @@
 \RequirePackage{listings}
 \RequirePackage{enumitem}
 \RequirePackage{fmtcount}
+\RequirePackage{stmaryrd}
 \pdfstringdefDisableCommands{%
   \let\quad\empty
 }
@@ -701,9 +722,14 @@
   \__bithesis_load_font:
 
   % misc / hideLinks 选项
-  \bool_if:NT \l__bithesis_misc_hide_links_bool
+  \bool_if:NTF \l__bithesis_misc_hide_links_bool
     {
       \hypersetup { hidelinks }
+    } {
+      \definecolor{blue}{RGB}{10,10,110}
+      \hypersetup{
+        colorlinks=true,
+      }
     }
 
   \__bithesis_if_thesis_english:TF {
@@ -1247,11 +1273,49 @@
 \cs_new:Npn \__bithesis_make_chinese_title_page: {
   \cleardoublepage
   \begin{titlepage}
-      {
+      \begin{minipage}[t]{0.48\textwidth}
         % 密级、分类号
         {\heiti \zihao{5} \noindent \c__bithesis_label_classification_tl}
         \l__bithesis_value_classification_tl\\
         {\heiti \zihao{5} \c__bithesis_label_udc_tl}  \l__bithesis_value_udc_tl
+      \end{minipage}
+
+      \hfill
+
+      % 以下内容是「特别类型」的内容，
+      % 在没有勾选的时候隐藏。
+      \bool_if:nT {\l__bithesis_cover_show_special_type_box_bool || \l__bithesis_value_international_student_ugp_bool || \l__bithesis_value_cross_research_bool} {
+        \begin{minipage}[t]{0.48\textwidth}
+          \vspace{-12pt}
+          \begin{flushright}
+          \setlength\fboxrule{1pt}\setlength\fboxsep{3mm}
+          \fbox{
+            \noindent\begin{minipage}{0.48\linewidth}
+              \heiti \zihao{-4}
+              \scalebox{1.1}\BigStar{}\hspace{4pt} \c__bithesis_label_special_type_tl\\
+
+              \makebox[1em][l]
+              {
+                \makebox[1pt][l]{\zihao{4}$\boxempty$}
+                \bool_if:NT \l__bithesis_value_cross_research_bool {
+                  $\checkmark$
+                }
+              }
+              \hspace{3pt}\c__bithesis_label_cross_research_tl\\
+              \makebox[1em][l]
+              {
+                \makebox[1pt][l]{\zihao{4}$\boxempty$}
+                \bool_if:NT \l__bithesis_value_international_student_ugp_bool {
+                  $\checkmark$
+                }
+              }
+              \hspace{3pt}\c__bithesis_label_international_student_ugp_tl
+            \end{minipage}
+          }
+          \end{flushright}
+        \end{minipage}
+        % 保证下面的内容空间不会受到挤占。
+        \vspace{-35pt}
       }
 
      \begin{center}
@@ -1376,28 +1440,27 @@
       \begin{center}
         \__bithesis_same_page:
         \chapter*{
-          \heiti\zihao{3}
+          \heiti\zihao{-2}
           \c__bithesis_graduate_label_originality_tl
         }
       \end{center}
 
-      % 本部分字号为四号。
-      \zihao{4}
+      % 本部分字号为三号。
+      \zihao{3}
       \qquad\c__bithesis_graduate_label_originality_clause_tl
-
-      \vspace{17mm}
+      \vspace{3\baselineskip}
 
       \begin{flushright}
         \c__bithesis_graduate_label_originality_author_signature_tl\par
       \end{flushright}
 
-      \vspace{16mm}
+      \vspace{3\baselineskip}
 
       % 使用授权声明部分。
       \begin{center}
         \__bithesis_same_page:
         \chapter*{
-          \heiti\zihao{3}
+          \heiti\zihao{-2}
           \c__bithesis_graduate_label_authorization_tl
         }
       \end{center}
@@ -1408,9 +1471,10 @@
 
       \begin{flushright}
         \begin{spacing}{1.65}
-          \zihao{4}
+          \zihao{3}
           % \hspace{5mm}\raisebox{-2ex}{\includegraphics[width=30mm]{example-image}}\hspace{5mm}
           \c__bithesis_graduate_label_originality_author_signature_tl\par
+          \vspace{1\baselineskip}
           \c__bithesis_graduate_label_originality_supervisor_signature_tl\par
         \end{spacing}
       \end{flushright}
@@ -1446,7 +1510,7 @@
   }
 \DeclareDocumentCommand \MakeCover {}
   {
-    \begin{blindPeerReview}[\l__bithesis_style_hide_cover_in_peer_review_bool]
+    \begin{blindPeerReview}[\l__bithesis_cover_hide_cover_in_peer_review_bool]
     \group_begin:
 
     \int_case:nn {\g__bithesis_thesis_type_int}
@@ -1537,7 +1601,8 @@
 
           \zihao{2}\textbf{\songti{\l__bithesis_style_headline_tl}}
 
-          \vspace{10mm}
+          % 外文翻译封面有两组中英文标题，行数变化范围大，因此采用 fill 比例布局
+          \vspace{\stretch{1}}
 
           {
 
@@ -1549,8 +1614,8 @@
             \dim_set:Nn \l__bithesis_cover_value_max_width_dim {115mm}
 
             \clist_set:Nn \l__bithesis_input_clist {
-              {\zihao{4}\textbf{外文原文题目}} {\l__bithesis_value_trans_origin_title_tl},
-              {\zihao{4}\textbf{中文翻译题目}} {\l__bithesis_value_trans_title_tl},
+              {\songti\zihao{4}\textbf{外文原文题目}} {\l__bithesis_value_trans_origin_title_tl},
+              {\songti\zihao{4}\textbf{中文翻译题目}} {\l__bithesis_value_trans_title_tl},
             }
 
             \zihao{-3}
@@ -1562,7 +1627,7 @@
 
           }
 
-          \vspace{19mm}
+          \vspace{\stretch{1}}
 
           \zihao{2}\textbf{\xihei:n \l__bithesis_value_title_tl}\par
 
@@ -1572,7 +1637,7 @@
             \zihao{3}\selectfont{\textbf{\l__bithesis_value_title_en_tl}}\par
           \end{spacing}
 
-          \vspace{19mm}
+          \vspace{\stretch{0.67}}
 
           \begin{spacing}{1.8}
             \tl_if_empty:NT \l__bithesis_cover_dilimiter_tl {
@@ -1607,7 +1672,7 @@
 
           \end{spacing}
 
-          \vspace*{\fill}
+          \vspace{\stretch{0.67}}
         \end{titlepage}
       }
       {3} {
@@ -1686,7 +1751,7 @@
 \NewDocumentCommand \MakeOriginality {}
   {
     \group_begin:
-    \begin{blindPeerReview}[\l__bithesis_style_hide_cover_in_peer_review_bool]
+    \begin{blindPeerReview}[\l__bithesis_cover_hide_cover_in_peer_review_bool]
       \int_case:nn {\g__bithesis_thesis_type_int}
       {
         {1}
@@ -1788,13 +1853,13 @@
   }
 \NewDocumentCommand \MakePaperBack {}
   {
-    \begin{blindPeerReview}[\l__bithesis_style_hide_cover_in_peer_review_bool]
+    \begin{blindPeerReview}[\l__bithesis_cover_hide_cover_in_peer_review_bool]
       \make_paper_back:
     \end{blindPeerReview}
   }
 \NewDocumentCommand \MakeTitle {}
   {
-    \begin{blindPeerReview}[\l__bithesis_style_hide_cover_in_peer_review_bool]
+    \begin{blindPeerReview}[\l__bithesis_cover_hide_cover_in_peer_review_bool]
       \__bithesis_make_chinese_title_page:
       \__bithesis_make_english_title_page:
     \end{blindPeerReview}
@@ -2229,6 +2294,15 @@
         \DeclareDelimFormat{multinamedelim}{}
         % 如果覆盖的是英文作者，不修改此项的话，会在最开始有空格。
         \DeclareDelimFormat{bibnamedelimd}{}
+
+        % 如果作者太多而被截断，不修改的话，会多余逗号、“等”云云。
+        % 被截断的充要条件：作者数量大于通过`\BITSetup`设置的`publications/maxbibnames`。
+        % 故设置标点来去掉逗号，
+        \DeclareDelimFormat[bib,biblist]{andothersdelim}{}
+        % 并设置本地化字符串来去掉“等”。
+        \setlocalbibstring{andothers}{}
+        \setlocalbibstring{andotherscn}{}
+        % 另外注意，我们仍尊重`maxbibnames`和`minbibnames`，保证若开盲审时显示作者，则关盲审时也正常。
       }
 
       % ===== 上方定义与「参考文献」部分相同
