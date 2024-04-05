@@ -29,7 +29,7 @@ Word2vec模型 多次迭代维护词汇表，从而减少OOV问题
 （1）实验环境
 本章的实验验证均运行于Linux系统下，其系统硬件配置如表\ref{tab:environment}所示。
 
-\begin{table}
+\begin{table}[H]
   \centering
   \caption{实验环境配置} 
   \label{tab:environment}
@@ -50,7 +50,7 @@ Word2vec模型 多次迭代维护词汇表，从而减少OOV问题
 
 为了验证预训练辅助模型在Token层面上表征学习的有效性，本文面向代码克隆检测任务对预训练辅助模型进行分析和评估，选取的实验数据为POJ104数据集。如表\ref{tab：dataset}所示，POJ104数据集是一个基于C语言所构建的大型数据集。OJ系统是一个以编程教学为目的公开评判系统，共存在104个编程问题，针对每个编程问题，学生们通过在线提交自己的代码来尝试解决，同时OJ系统将自动判断提交源代码的正确性和有效性。对于OJ系统中同一个编程问题来说，其所有正确提交的代码都为克隆代码，对于不同的编程问题所提交的代码，即为非克隆代码。POJ104数据集针对每一个编程问题，均提供500个学生提交源代码，即共有52000个样本。
 
-\begin{table}
+\begin{table}[H]
   \centering
   \caption{POJ104数据集} 
   \label{tab：dataset}
@@ -70,7 +70,7 @@ Word2vec模型 多次迭代维护词汇表，从而减少OOV问题
 
 得到POJ104数据集后，本文首先对数据集进行初步筛选，去掉其中包含乱码的样本，共得到51485个源代码样本。然后对源代码进行预处理，删除样本中包含的空白行和注释等多余代码，并将数据集保存到一个program.pkl文件中，program.pkl文件中一共包含51485行×3列的数据集，每一行数据代表一个源代码样本，第一列为源代码id，第二列保存源代码样本code，第三列为源代码的标签label，即属于哪一个编程问题。接着，本文随机两两组合同一标签label的源代码，组成5200个真克隆对，随机组合不同标签的源代码组成44800个假克隆对，一共给包含50000个克隆对，并将其保存到oj\_clone\_ids.pkl文件中，oj\_clone\_ids.pkl文件中一共包含50000行×3列的数据集，每一行数据代表一个克隆对样本，第一列为源代码id1，第二列为源代码id2，第三列为克隆对的标签label，真克隆对标签为1，假克隆对标签为0。最后，依据随机种子将数据集按照3：1：1划分为训练集、测试集、验证集，其中的正负样本数如下表\ref{tab:ClonePairs}所示。
 
-\begin{table}
+\begin{table}[H]
   \centering
   \caption{本文预处理后的POJ104数据集正负样本数} 
   \label{tab:ClonePairs}
@@ -90,7 +90,7 @@ Word2vec模型 多次迭代维护词汇表，从而减少OOV问题
 
 代码克隆检测问题是二分类问题，因此本文采用精确率（Accuracy）、精确率（Precision）、召回率（Recall）、F1值四个评估指标来度量实验结果，其中使用了混淆矩阵中的TP、FN、FP、TN（如表\ref{tab:ConfusionMatrix}）。
 
-\begin{table}
+\begin{table}[H]
   \centering
   \caption{分类问题的混淆矩阵} 
   \label{tab:ConfusionMatrix}
@@ -105,32 +105,40 @@ Word2vec模型 多次迭代维护词汇表，从而减少OOV问题
   \end{tabular*}
 \end{table}
 
-准确率(accuracy)=(TP+TN)/(TP+FN+FP+TN)
+其中，真阳性(True Positive, TP)：样本实际为正样本，并且被模型预测为正样本，即实际上标记为真克隆对并且被检测出来为真克隆对的代码对。
+ 
+假阳性(False Positive, FP)：样本实际为负样本，但是被模型预测为正样本，即实际上标记为假克隆对但是被检测出来为真克隆对的代码对。
+ 
+假阴性(False Negative, FN)：样本实际为正样本，但是被模型预测为负样本，即实际上标记为真克隆对但是被检测出来为假克隆对的代码对。
+ 
+真阴性(True Negative, TN)：样本实际为负样本，并且被模型预测为负样本，即实际上标记为假克隆对并且被检测出来为假克隆对的代码对。
 
-精确率(precision)=TP/(TP+FP)
+精确率（Accuracy）表示预测为正的样本中真实值为正的比率，计算公式如\ref{e5}所示：
+\begin{equation}\label{e5}
+  Accuracy = \frac{TP+TN}{TP+FN+FP+TN} 
+\end{equation}
 
-召回率(recall)=TP/(TP+FN)
+精确率（Precision）表示正确检测到的代码克隆数量占全部预测为代码克隆的比例，计算公式如\ref{e6}所示：
+\begin{equation}\label{e6}
+  Precision = \frac{TP}{TP+FP} 
+\end{equation}
 
-Recall：召回率表示的是样本中的正例中被预测正确的概率。主要由两部分组成，一部分是是把正类预测成正类（TP），另一部分就是把正类预测为负类（FN）。
-Recall = TP
-TP + FN （17）
+召回率(Recall)表示正确检测到的代码克隆数量占总体实际代码克隆数量的比例，计算公式如\ref{e7}所示：
+\begin{equation}\label{e7}
+  Recall = \frac{TP}{TP+FN} 
+\end{equation}
 
-P和R指标有时候会出现的矛盾的情况，这样就需要综合考虑他们，最常见的方法就是F-Measure。
-
-当参数α=1时，就是最常见的F1，也即
-
-精确率：正确检测到的代码克隆数量占全部预测为代码克隆的比例。
-召回率：正确检测到的代码克隆数量占总体实际代码克隆数量的比例。
-F1：精确率和召回率的加权调和平均，用于评价分类模型的好坏。
-
+精确率（Precision）和召回率(Recall)指标有时候会出现的矛盾的情况，这样就需要综合考虑他们，最常见的方法就是F-Measure,精确率和召回率的加权调和平均，用于评价分类模型的好坏。计算公式如\ref{e8}。
+\begin{equation}\label{e8}
+  F1 = \frac{2*Precision*Recall}{Precision+Recall} 
+\end{equation}
 
 \subsection{预训练辅助模型消融实验结果}
 消融对比实验：体现改进的辅助模型的有效性，如图\ref{tab:category}
 基于Token的Bi LSTM
 基于Token的+预训练辅助模型的Bi LSTM
 
-
-\begin{table}
+\begin{table}[H]
   \centering
   \caption{预训练辅助模型实验结果} 
   \label{tab:category}
