@@ -58,7 +58,7 @@ Word2vec模型 多次迭代维护词汇表，从而减少OOV问题
   \end{tabular*}
 \end{table}
 
-\subsection{数据集}
+\subsection{实验数据集}
 \label{subsec:Dataset}
 为了验证预训练辅助模型在Token层面上表征学习的有效性，本文面向代码克隆检测任务对预训练辅助模型进行分析和评估，选取的实验数据为POJ104数据集。如表\ref{tab：dataset}所示，POJ104数据集是一个基于C语言所构建的大型数据集。OJ系统是一个以编程教学为目的公开评判系统，共存在104个编程问题，针对每个编程问题，学生们通过在线提交自己的代码来尝试解决，同时OJ系统将自动判断提交源代码的正确性和有效性。对于OJ系统中同一个编程问题来说，其所有正确提交的代码都为克隆代码，对于不同的编程问题所提交的代码，即为非克隆代码。POJ104数据集针对每一个编程问题，均提供500个学生提交源代码，即共有52000个样本。
 
@@ -98,7 +98,7 @@ Word2vec模型 多次迭代维护词汇表，从而减少OOV问题
   \end{tabular*}
 \end{table}
 
-\subsection{实验评估}
+\subsection{评估指标}
 \label{subsec:Index}
 代码克隆检测问题是二分类问题，因此本文采用准确率（Accuracy）、精确率（Precision）、召回率（Recall）、F1值四个评估指标来度量实验结果，其中使用了混淆矩阵中的TP、FN、FP、TN，如表\ref{tab:ConfusionMatrix}所示。
 
