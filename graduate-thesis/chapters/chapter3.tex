@@ -1,39 +1,51 @@
 \chapter{基于预训练辅助模型的Token表征学习}
+\label{chap:Token}
 本章主要对本文提出的基于预训练辅助模型的Token表征学习方法进行详细介绍，首先介绍其基本思想，接着阐述其方法设计，以及具体的实现过程，最后介绍实验验证过程和结果。
-\section{研究动机}
 
-本文针对现有存在的问题，
+\section{研究动机}
+\label{sec:Motivation}
 
 基于Token的代码表征通常利用词法分析器将代码中的词汇单元（Token）划分出来。这些词汇单元通常包含关键字、数字、标识符等。将代码表示为词汇单元序列之后，利用深度学习技术对其进行建模，学习代码序列中所包含的有效信息，如功能语义信息、语法结构信息等，最后生成具有丰富代码信息的表征向量，应用于后续的代码克隆检测任务中。现有方法大多都对token进行了规范化，比如将变量名用统一的标识符来代替，这样存在的问题是会丢失部分词法信息，但是如果不进行规范化，会存在集外词（Out-of-vocabulary，简称OOV）的问题，即出现了在词汇表中不存在的token。集外词OOV问题严重限制了代码表示的有效性。
 
-针对上述问题，本文采用预训练增强的辅助模型得到词汇表，从而提高代码克隆检测的准确率。
-\section{方法设计}
+程序中存在大量用户自己定义的标识符，不同用户的命名习惯不同，在对程序代码的词法单元建模时，预先构建好的词库往往不能满足建模的需求。
 
+代码库中的超出词表问题当前代码分析文献大都根据代码文本中所存在的自然性这一特征进行具体的代码分析任务，如代码补全、代码克隆检测这类任务都是将代码视为自然语言文本进行处理。如本文背景知识部分所述，
+当使用自然语言技术对代码文本进行处理时，由于软件开发人员在编写代码时可以自由地创建标识符，这一过程将会产生一个规模巨大且稀疏的代码词表。代码词表的规模会直接影响代码分析任务的效率。在神经网络模型训练的过程中，通常的做法是对这个大词表中的词汇单元个数进行数量的限制，因此当某个词汇在词表中没有出现过，那么神经网络模型将无法对其进行处理。这就是代码分析中的超出词表问题（OoV）。
+
+针对上述问题，本文采用预训练增强的辅助模型得到词汇表，从而提高代码克隆检测的准确率。
+
+\section{方法设计}
+\label{sec:}
 本节将主要介绍基于预训练辅助模型的Token表征学习方法设计与实现，首先介绍该方法的整体框架，并分别从预训练辅助模型、Token表征学习的具体设计及实现。
 
 \subsection{框架概述}
+\label{subsec:Overview}
 基于预训练辅助模型的Token表征学习：
 
 \subsection{预训练辅助模型}
+\label{subsec:Model}
 Word2vec模型 多次迭代维护词汇表，从而减少OOV问题
 
 在模型训练之前，通过选取合适的模型从代码语料库中学习基本单元的语法语义信息，以及这些单元之间的联系，最终给出一份单词-向量形式的词汇表，从而减少出现集外词问题的概率。具体的，第一次迭代选择相邻的两个token组合为一个单元，查找出最频繁的token组合确定为一个组合单元，并将组合单元更新到词汇表中，然后二次迭代，每次迭代在原来的基本单元上再组合一个新的邻近token作为新的判断单元，每次迭代都会更新词汇表。在得到词汇表之后，根据词汇表获取每个单元的向量表示。
 \subsection{Token表征学习}
+\label{subsec:Token}
 采用BiLST模型
 
 将token序列对应的向量输入到Bi LSTM网络中，经过Bi LSTM学习哪些信息应该被记住哪些信息应该被遗忘，最终得到每个基本单元包含语义信息和上下文信息的向量表示。Bi LSTM由一个正向的LSTM和一个反向的LSTM组成，主要思想是通过把序列向前、向后分别输入给两个独立的递归网络，这两个子网络连接到一个输出层，在每个词的输出部分把两个子网络的输出信息进行整合，这样网络就同时拥有了序列中每个词的过去时刻信息和未来时刻信息。Bi LSTM可以捕获到序列前后的关系依赖，将代码片段的Token序列转换为可相互比较的向量。
-\section{实验验证}
-为了验证基于预训练辅助模型的Token表征方法的有效性，
 
-\subsection{实验设计}
-（1）实验环境
+\section{实验验证}
+\label{sec:Experiment}
+为了验证基于预训练辅助模型的Token表征方法的有效性，本节展开实验验证。首先，介绍了实验整体的环境配置、数据集，以及实验评估；接着，对基于预训练模型的Token表征方法进行了消融实验。
+
+\subsection{实验环境}
+\label{subsec:Environment}
 本章的实验验证均运行于Linux系统下，其系统硬件配置如表\ref{tab:environment}所示。
 
 \begin{table}[H]
   \centering
   \caption{实验环境配置} 
   \label{tab:environment}
-  \begin{tabular*}{0.5\textwidth}{@{\extracolsep{\fill}}cc}
+  \begin{tabular*}{0.6\textwidth}{@{\extracolsep{\fill}}cc}
   \toprule
     环境			&配置		\\
   \midrule
@@ -46,15 +58,15 @@ Word2vec模型 多次迭代维护词汇表，从而减少OOV问题
   \end{tabular*}
 \end{table}
 
-（2）实验数据集
-
+\subsection{数据集}
+\label{subsec:Dataset}
 为了验证预训练辅助模型在Token层面上表征学习的有效性，本文面向代码克隆检测任务对预训练辅助模型进行分析和评估，选取的实验数据为POJ104数据集。如表\ref{tab：dataset}所示，POJ104数据集是一个基于C语言所构建的大型数据集。OJ系统是一个以编程教学为目的公开评判系统，共存在104个编程问题，针对每个编程问题，学生们通过在线提交自己的代码来尝试解决，同时OJ系统将自动判断提交源代码的正确性和有效性。对于OJ系统中同一个编程问题来说，其所有正确提交的代码都为克隆代码，对于不同的编程问题所提交的代码，即为非克隆代码。POJ104数据集针对每一个编程问题，均提供500个学生提交源代码，即共有52000个样本。
 
 \begin{table}[H]
   \centering
   \caption{POJ104数据集} 
   \label{tab：dataset}
-  \begin{tabular*}{0.5\textwidth}{@{\extracolsep{\fill}}cc}
+  \begin{tabular*}{0.6\textwidth}{@{\extracolsep{\fill}}cc}
   \toprule
     代码			&属性		\\
   \midrule
@@ -86,15 +98,15 @@ Word2vec模型 多次迭代维护词汇表，从而减少OOV问题
   \end{tabular*}
 \end{table}
 
-（3）评估指标
-
-代码克隆检测问题是二分类问题，因此本文采用精确率（Accuracy）、精确率（Precision）、召回率（Recall）、F1值四个评估指标来度量实验结果，其中使用了混淆矩阵中的TP、FN、FP、TN（如表\ref{tab:ConfusionMatrix}）。
+\subsection{实验评估}
+\label{subsec:Index}
+代码克隆检测问题是二分类问题，因此本文采用准确率（Accuracy）、精确率（Precision）、召回率（Recall）、F1值四个评估指标来度量实验结果，其中使用了混淆矩阵中的TP、FN、FP、TN，如表\ref{tab:ConfusionMatrix}所示。
 
 \begin{table}[H]
   \centering
   \caption{分类问题的混淆矩阵} 
   \label{tab:ConfusionMatrix}
-  \begin{tabular*}{0.5\textwidth}{@{\extracolsep{\fill}}ccc}
+  \begin{tabular*}{0.7\textwidth}{@{\extracolsep{\fill}}ccc}
   \toprule
   \multirow{2}{*}{实际值} & \multicolumn{2}{c}{预测值} \\
   \multirow{2}{*}{} & 正样本(P) & 负样本(N) \\
@@ -105,7 +117,9 @@ Word2vec模型 多次迭代维护词汇表，从而减少OOV问题
   \end{tabular*}
 \end{table}
 
-其中，真阳性(True Positive, TP)：样本实际为正样本，并且被模型预测为正样本，即实际上标记为真克隆对并且被检测出来为真克隆对的代码对。
+其中，混淆矩阵中的真阳性、假阳性、真阴性、假阴性代表的含义如下：
+
+真阳性(True Positive, TP)：样本实际为正样本，并且被模型预测为正样本，即实际上标记为真克隆对并且被检测出来为真克隆对的代码对。
  
 假阳性(False Positive, FP)：样本实际为负样本，但是被模型预测为正样本，即实际上标记为假克隆对但是被检测出来为真克隆对的代码对。
  
@@ -113,7 +127,7 @@ Word2vec模型 多次迭代维护词汇表，从而减少OOV问题
  
 真阴性(True Negative, TN)：样本实际为负样本，并且被模型预测为负样本，即实际上标记为假克隆对并且被检测出来为假克隆对的代码对。
 
-精确率（Accuracy）表示预测为正的样本中真实值为正的比率，计算公式如\ref{e5}所示：
+准确率（Accuracy）表示预测为正的样本中真实值为正的比率，计算公式如\ref{e5}所示：
 \begin{equation}\label{e5}
   Accuracy = \frac{TP+TN}{TP+FN+FP+TN} 
 \end{equation}
@@ -128,7 +142,7 @@ Word2vec模型 多次迭代维护词汇表，从而减少OOV问题
   Recall = \frac{TP}{TP+FN} 
 \end{equation}
 
-精确率（Precision）和召回率(Recall)指标有时候会出现的矛盾的情况，这样就需要综合考虑他们，最常见的方法就是F-Measure,精确率和召回率的加权调和平均，用于评价分类模型的好坏。计算公式如\ref{e8}。
+精确率（Precision）和召回率(Recall)指标有时候会出现的矛盾的情况，这样就需要综合考虑两者的表现，最常见的方法就是F1,精确率和召回率的加权调和平均，用于评价分类模型的好坏。计算公式如\ref{e8}。
 \begin{equation}\label{e8}
   F1 = \frac{2*Precision*Recall}{Precision+Recall} 
 \end{equation}
@@ -153,4 +167,5 @@ Word2vec模型 多次迭代维护词汇表，从而减少OOV问题
 \end{table}
 
 \section{本章小结}
-本章
+\label{sec:Summary3}
+本章主要对RLCCD中基于预训练辅助模型的Token表征学习方法的设计与实现进行详细阐述。首先介绍了Token维度的研究动机，其次介绍了Token表征学习的方法设计，具体论述了其整体框架、预训练辅助模型、表征学习，接着开展实验验证，结果表明了此方法的有效性和模型的准确性。
