@@ -36,11 +36,11 @@
 
 与自然语言处理类似，源代码的词法单元Token可以视为句子中的单词，Token维度的代码表征方法第一步就是将词法单元Token转换为机器易于理解和操作的数值向量，即词嵌入技术。它将词汇表中的每个单词转换成一个低维度、连续的向量表示，这种向量通常被称为词向量。目前，使用预训练词嵌入模型训练词向量的研究工作发展迅速，Word2vec、GloVe、FastText、ELMo和BERT等模型也相继被提出。其中，Word2vec模型通过从大规模无标注文本数据集中学习上下文信息，自动捕捉并编码词汇的语义关系，生成的词嵌入向量作为下游任务的输入特征，可以显著提升神经网络模型的性能和泛化能力。因此，本文采用Word2vec模型进行词嵌入。
 
-同时，为了减少集外词OOV问题出现的概率，本文提出了一种相邻单元迭代算法（Adjacent token iterative algorithm，ATIA），该算法通过组合Token序列中相邻单元构造新的代码表示单元，然后统计新单元出现的频率，根据频率信息多次迭代，不断更新词汇表。下面对相邻单元迭代算法进行介绍。
+同时，为了减少集外词OOV问题出现的概率，本文提出了一种相邻单元迭代算法（Adjacent token iterative algorithm，简称ATIA），该算法通过组合Token序列中相邻单元构造新的代码表示单元，然后统计新单元出现的频率，根据频率信息多次迭代，不断更新词汇表。下面对相邻单元迭代算法进行介绍。
 
-具体的，首先将代码数据集中的源代码经过代码预处理，得到对应的Token序列作为初始语料库。然后按照代码块组合相邻Token并查找出出现次数最频繁的Token组合，并将这个组合称为新的迭代单元Adjacent gram，简称Agram。最后将这个Agram当作新的独立单元，加入到词汇表中，而原本组成这个Agram的原始Token单元并不会从词汇表中删除。在第一次迭代的时候，选取相邻的两两Token作为组合，把出现最频繁的Token组合确定为一个Agram单元之后再进行二次迭代，每次迭代在原来的基本单元上再组合一个新的邻近Token作为新的判断单元，不断的进行迭代，每次迭代都要对应的更新词汇表。
+具体的，首先将代码数据集中的源代码经过代码预处理，得到对应的Token序列作为初始语料库，代码预处理的工作详见\ref{subsec:Preprocess}节，这里不展开阐述。然后按照代码块组合相邻Token并查找出出现次数最频繁的Token组合，将这个组合称为新的迭代单元（Adjacent gram，简称Agram）。最后将这个Agram当作新的独立单元，加入到词汇表中，而原本组成这个Agram的原始Token单元并不会从词汇表中删除。在第一次迭代的时候，选取相邻的两两Token作为组合，把出现最频繁的Token组合确定为一个Agram单元之后再进行二次迭代，每次迭代在原来的基本单元上再组合一个新的邻近Token作为新的判断单元，不断的进行迭代，每次迭代都要对应的更新词汇表。
 
-相邻单元迭代算法ATIA的伪代码如\ref{alg1}所示。该算法有两个输入：待处理的初始Token语料库、迭代次数，输出为经过多次迭代后生成的语料库，具体包括初始化AgramsSet、计算单元Agram出现的次数、更新语料库3个步骤，具体来说，每个步骤的作用如下：
+相邻单元迭代算法ATIA的伪代码如\ref{alg1}所示。该算法有两个输入：待处理的初始Token语料库$Corpus$、迭代次数$N$，输出为经过多次迭代后生成的语料库$NewCorpus$，具体包括初始化AgramsSet、计算单元Agram出现的次数、更新语料库3个步骤，每个步骤的作用如下：
 
 \begin{algorithm}[ht!]  %ht!参数是调整算法在文章中的位置
 	\renewcommand{\algorithmicrequire}{\textbf{Input:}}
@@ -51,21 +51,27 @@
     \Require Tokens Corpus $Corpus$
     \Require The number of iterations $N$
 		\Ensure New Corpus $NewCorpus$
-    \State $AgramsSet = \varnothing $ \Comment{step1:初始化AgramsSet} 
-		\For{$int i \leftarrow 1 to N$}
+    \State $AgramsSet = \varnothing $ 
+    \State $NewCorpus \leftarrow Corpus $ 
+		\For{$i \leftarrow 1$ to $N$}
       \If {i == 1}
-        \State $ AgramSet \leftarrow set([token for tken in line for line in sentence])$
+        \State $vocab[]$ = token[]
+        \State $ AgramSet \leftarrow set([token\quad for tken in line for line in sentence])$ \Comment{step1:初始化AgramsSet}
       \Else
-      \State $Atokens(A_i) = learn_algorithm(Token(T_i)) $ \Comment{调用learn算法获取当前一轮的迭代结果，更新Agrams数组}
+      \State $Atokens(A_i) = learn_algorithm(Token(T_i)) $ 
+      
+      \\ \hspace*{\fill} \\
+
       \State $Agram = max（Agrams） $ \Comment{计算单元Agram出现的次数}
       \State $ add Agram to Vocab(V_i)$ \Comment{更新语料库}
       \EndIf
     \EndFor \\
-    \Return $NewCorpus = [vocab[line] for line in sentences]$
+    \Return $NewCorpus$
 	\end{algorithmic}
 \end{algorithm}
 
 （1）初始化AgramsSet
+AgramsSet初始为空集，在第一次迭代时，得到对应的
 
 该算法的主要作用是控制算法逻辑，调用其他方法。在算法的第一行大的For循环里控制迭代的次数，每次迭代都需要调用Funtion 2进行具体的处理，获取到Funtion 2返回的的结果，即当前迭代轮次得到的所有Token组合和对应的出现次数（算法第二行），再根据次数选取出出现次数最多的组合（算法第三行），将这个新的组合作为一个新的单元Agram，调用Funtion 3把这个新的单元添加到语料库中（算法第五行）。第一次迭代，组合相邻Token，得到Agram组合并计算这些组合在语料库中出现的次数。首先要初始化一个词典用来存放最终结果（算法第一行），在具体组合过程中，首先把代码按照语句也就是行进行
 分割（算法第二行），然后把这个语句切割为oken 存入一个集合（第三行）。依次遍历这些集合通过组合相邻的token获取新的基本单元（算法第四、五行），
@@ -75,25 +81,56 @@
 时遍历语料库获取这些组合在语料库中出现的次数。最后把 token 组合当作 key，组合出现的次数当作对应 key 的 value 值返回给调用函数。
 
 （3）更新语料库
-
-% 如果原始语料库中存在新的 bigram 单元就将该 bigram 单元放入语料库。接收的输入是当前最新的
-% 语料库和主函数中确定的待合并的 token 组合 bigram。首先初始化一个空的语料库 new_corpus 用来存放新的语料（算法第一行），在最外层的 for 循环中进行和算法2第二行类似的操作，即将当前语句 statement 切割为独立的 token 存入集合。然后在一个 while循环中遍历集合（算法第四行），如果 segments 集合里第 i 个token 和第 i + 1 个 token 的组合等于传参给函数的 bigram（算法第五行），将第 i个 token 和第 i + 1 个 token 的组合 bigram 放入语料库 new_corpus（算法第六行）。如果不满足 if 判断，就直接把第 i 个 token 存入 new_corpus，继续循环判断。这样就可以保证即使某个 token 不存在于任何一个 bigram 单元，该 token 也会以一个单独的单元存放于语料库中。最后将合并之后最新的语料库 new_corpus 返回给主函数。
-
+得到对应的
 
 \subsection{Token代码表征设计}
 \label{subsec:Token}
 
-将token序列对应的向量输入到Bi LSTM网络中，经过Bi LSTM学习哪些信息应该被记住哪些信息应该被遗忘，最终得到每个基本单元包含语义信息和上下文信息的向量表示。Bi LSTM由一个正向的LSTM和一个反向的LSTM组成，主要思想是通过把序列向前、向后分别输入给两个独立的递归网络，这两个子网络连接到一个输出层，在每个词的输出部分把两个子网络的输出信息进行整合，这样网络就同时拥有了序列中每个词的过去时刻信息和未来时刻信息。Bi LSTM可以捕获到序列前后的关系依赖，将代码片段的Token序列转换为可相互比较的向量。
+考虑到代码的Token序列是一种序列化输入，在代码表征模型的选取中，本文选择了双向长短期记忆网络BiLSTM模型。BiLSTM模型由一个正向的LSTM模型和一个反向的LSTM模型组成，主要思想是通过把序列向前、向后分别输入给两个独立的递归网络，这两个子网络连接到一个输出层，在每个词的输出部分把两个子网络的输出信息进行整合，这样网络就同时拥有了序列中每个词的过去时刻信息和未来时刻信息。BiLSTM可以捕获到序列前后的关系依赖，将代码片段的Token序列转换为可相互比较的向量。BiLSTM模型的结构如图所示。
+
+
+模型结构设计
+
+输入层
+
+代码表示层
+
+输出层
+
+
+将token序列对应的向量输入到Bi LSTM网络中，经过Bi LSTM学习哪些信息应该被记住哪些信息应该被遗忘，最终得到每个基本单元包含语义信息和上下文信息的向量表示。
 
 \section{Token表征方法具体实现}
 \label{sec:achieve}
-本文提出的基于预训练辅助模型的Token表征学习方法的实现如图\ref{fig:token}所示。该方法的输入是代码片段$C_{a},C_{b}$对应的Token序列，输出是$C_{a},C_{b}$对应的属性特征向量，整体采用Siamese架构，两个子网络共享权值。该框架主要包括预训练辅助词嵌入、Token代码表征两个阶段。
+本文提出的基于预训练辅助模型的Token表征学习方法的实现如图\ref{fig:token}所示。该方法的输入是代码片段$C_{a},C_{b}$对应的Token序列，表示为$\left( w_{1}^{a},w_{2}^{a},\ldots,w_{m}^{a}\right)$ 和 $\left( w_{1}^{b},w_{2}^{b},\ldots,w_{n}^{b} \right)$，输出是$C_{a},C_{b}$对应的属性特征向量 $V_{a}^{Token},V_{b}^{Token}$，整体采用Siamese架构，两个子网络共享权值,从下到上，主要包括预训练辅助词嵌入、Token代码表征两个阶段。
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.95\textwidth]{figures/token}
   \caption{基于预训练辅助模型的Token表征学习方法实现}\label{fig:token}
 \end{figure}
+
+具体的，在预训练辅助词嵌入阶段，对于代码片段$C_{a}$，经过分割得到的Token序列$\left( w_{1}^{a},w_{2}^{a},\ldots,w_{m}^{a}\right)$，（$m$是代码片段A的长度），然后在词汇表$E_{w}$中查找每个Token对应的向量，将所有的token $w_{i}^{a} \left(i \in [1,m]\right)$ 转化为密集向量。其中查找词汇表$E_{w}$已经经过代码语料库使用相邻单元迭代算法ATIA基于Word2vec模型进行预训练，在模型中是固定的。其查找过程可以表示为公式\ref{e9}：
+
+\begin{equation}\label{e9}
+  \begin{split}
+  x_{i}^{a} = lookup \left(w_{i}^{a} ,E_{w} \right)
+  \end{split}
+\end{equation}
+
+经过嵌入阶段的预训练后，代码片段$C_{a}$生成了序列$\left( x_{1}^{a},x_{2}^{a},\ldots,x_{m}^{a}\right)$。使用同样的嵌入方式，可以得到对于Token序列$\left( w_{1}^{b},w_{2}^{b},\ldots,w_{n}^{b}\right)$，（$n$是代码片段B的长度）的向量表示$\left( x_{1}^{b},x_{2}^{b},\ldots,x_{n}^{b} \right)$。
+
+在Token代码表征阶段，将代码向量的Token序列作为输入，使用BiLSTM模型进行编码。处理过程分为两个步骤，如公式\ref{e10}所示：
+
+\begin{equation}\label{e10}
+  \begin{split}
+    h_{1}^{aBiLSTM},h_{2}^{aBiLSTM},\ldots,h_{n}^{aBiLSTM} = BiLSTM \left(x_{1}^{a},x_{2}^{a},\ldots,x_{m}^{a}\right) \\
+    V_{a}^{Token} = Attention \left( h_{1}^{aBiLSTM},h_{2}^{aBiLSTM},\ldots,h_{n}^{aBiLSTM} \right)
+  \end{split}
+\end{equation}
+
+经过嵌入阶段的预训练后，每一个Token $w_{i}^{a}$ 都被转换为一个密集向量$x_{i}^{a}$,经过BiLSTM编码后，生成了$h_{i}^{aBiLSTM}$，然后经过Attention层的总结后，生成了$V_{a}^{Token}$作为代码片段$C_{a}$的最终Token表示，即属性特征向量。
+同样，可以使用相同的计算得以$\left( x_{1}^{b},x_{2}^{b},\ldots,x_{n}^{b} \right)$作为输入为代码片段$C_{b}$计算$V_{b}^{Token}$。
 
 
 \section{实验验证}
