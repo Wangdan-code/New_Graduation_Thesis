@@ -1,0 +1,10 @@
+digraph "&lt;operator&gt;.indirectIndexAccess" {  
+"90" [label = <(METHOD,&lt;operator&gt;.indirectIndexAccess)> ]
+"94" [label = <(METHOD_RETURN,ANY)> ]
+"91" [label = <(PARAM,p1)> ]
+"92" [label = <(PARAM,p2)> ]
+  "91" -> "94"  [ label = "DDG: p1"] 
+  "92" -> "94"  [ label = "DDG: p2"] 
+  "90" -> "91"  [ label = "DDG: "] 
+  "90" -> "92"  [ label = "DDG: "] 
+}

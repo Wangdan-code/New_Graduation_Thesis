@@ -1,0 +1,10 @@
+digraph "printf" {  
+"99" [label = <(METHOD,printf)> ]
+"103" [label = <(METHOD_RETURN,ANY)> ]
+"100" [label = <(PARAM,p1)> ]
+"101" [label = <(PARAM,p2)> ]
+  "100" -> "103"  [ label = "DDG: p1"] 
+  "101" -> "103"  [ label = "DDG: p2"] 
+  "99" -> "100"  [ label = "DDG: "] 
+  "99" -> "101"  [ label = "DDG: "] 
+}

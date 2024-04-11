@@ -91,6 +91,28 @@ AgramsSet初始为空集，在第一次迭代时，得到对应的
 
 模型结构设计
 
+本文采用双向长短期记忆（BiLSTM）网络模型，模型的结构如图\ref{fig:BiLSTM}所示。该模型同时在正向、反向两个方向处理数据，从而使神经网络可以同时获取未来和过去的上下文信息，有助于提高模型对Token序列数据的表征能力。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{figures/BiLSTM}
+  \caption{BiLSTM模型结构图}\label{fig:BiLSTM}
+\end{figure}
+
+令BiLSTM的$t$时刻的前向隐藏状态为$\overrightarrow{h_t}$，向前输出为$\overrightarrow{y_t}$，向后隐藏状态为$\overrightarrow{h_t}$，向后输出为$\overleftarrow{y_t}$，输出层参数是$W_0$与$b_0$，则$\overrightarrow{y_t}$和$\overleftarrow{y_t}$分别表示为：
+
+\begin{equation}\label{e9}
+  \begin{split}
+    \overrightarrow{y_t} = W_0 \cdot LSTM\left(x_{t},\overrightarrow{h_{t-1}}\right) + b_0
+  \end{split}
+\end{equation}
+
+\begin{equation}\label{e9}
+  \begin{split}
+    \overleftarrow{y_t} = W_0 \cdot LSTM\left(x_{t},\overleftarrow{h_{t+1}}\right) + b_0
+  \end{split}
+\end{equation}
+
 输入层
 
 代码表示层
@@ -102,7 +124,83 @@ AgramsSet初始为空集，在第一次迭代时，得到对应的
 
 \section{Token表征方法具体实现}
 \label{sec:achieve}
-本文提出的基于预训练辅助模型的Token表征学习方法的实现如图\ref{fig:token}所示。该方法的输入是代码片段$C_{a},C_{b}$对应的Token序列，表示为$\left( w_{1}^{a},w_{2}^{a},\ldots,w_{m}^{a}\right)$ 和 $\left( w_{1}^{b},w_{2}^{b},\ldots,w_{n}^{b} \right)$，输出是$C_{a},C_{b}$对应的属性特征向量 $V_{a}^{Token},V_{b}^{Token}$，整体采用Siamese架构，两个子网络共享权值,从下到上，主要包括预训练辅助词嵌入、Token代码表征两个阶段。
+
+% \lstset{language=C}
+% \begin{lstlisting}
+%     /* Count the sum of elements in an array */
+%     #include <stdio.h>
+    
+%     int main()
+%     {
+%         int i = 0;//parameter one
+%         int data[5]={1,2,3,4,5};//parameter two
+%         int result = 0;//parameter three
+        
+%         for(;i<5;i++)
+%         {
+%             result += data[i];
+%         }
+%         printf("%d",result); 
+%         return 0;
+%     }
+% \end{lstlisting}
+
+% \lstset{language=C}
+% \begin{lstlisting}
+%     /* Count the sum of elements in an array */
+%     #include <stdio.h>
+    
+%     int main()
+%     {
+%         int i = 0;//parameter one
+%         int data[5]={1,2,3,4,5};//parameter two
+%         int result = 0;//parameter three
+%         while(i<5)
+%         {
+%             result += data[i];
+%             i++;
+%         }
+%         printf("%d",result); 
+%         return 0;
+%     }
+    
+% \end{lstlisting}
+
+在介绍Token表征方法具体实现之前，本文首先给出示例源代码片段图\ref{fig:code}，其中，图\ref{fig:code1}和图\ref{fig:code2}是两个简单的代码片段，函数的主要功能为：计算$Data$数组的元素之和，其中图\ref{fig:code1}的第10-13行采用for循环，图\ref{fig:code2}的第9-13行采用while循环，这两个代码片段属于真克隆对。
+\begin{figure}[htbp]
+  \centering  %居中
+  \subfigure[C语言代码片段$C_{a}$]{   %第一张子图
+      \centering    %子图居中
+      \includegraphics[width=0.45\textwidth]{figures/code1}  %以pic.jpg的0.5倍大小输出
+      \label{fig:code1} %引用标签
+  }
+  \subfigure[C语言代码片段$C_{b}$]{ %第二张子图
+      \centering    %子图居中
+      \includegraphics[width=0.45\textwidth]{figures/code2}%以pic.jpg的0.5倍大小输出
+      \label{fig:code2} %引用标签
+  }
+  \caption{C语言代码片段示例}    %大图名称
+  \label{fig:code}    %图片引用标记
+\end{figure}
+
+经过\ref{subsec:Preprocess}小节代码预处理，可以得到示例代码片段$C_{a},C_{b}$对应的Token序列，如图\ref{fig:tokencode}所示。
+\begin{figure}[htbp]
+  \centering  %居中
+  \subfigure[C语言代码片段$C_{a}$对应的Token序列]{   %第一张子图
+      \centering    %子图居中
+      \includegraphics[width=0.45\textwidth]{figures/token1}  %以pic.jpg的0.5倍大小输出
+      \label{fig:token1} %引用标签
+  }
+  \subfigure[C语言代码片段$C_{b}$对应的Token序列]{ %第二张子图
+      \centering    %子图居中
+      \includegraphics[width=0.45\textwidth]{figures/token2}%以pic.jpg的0.5倍大小输出
+      \label{fig:token2} %引用标签
+  }
+  \caption{示例源代码对应的Token序列}    %大图名称
+  \label{fig:tokencode}    %图片引用标记
+\end{figure}
+
+接下来，本章提出的基于预训练辅助模型的Token表征学习方法的实现如图\ref{fig:token}所示。该方法的输入是代码片段$C_{a},C_{b}$对应的Token序列，表示为$\left( w_{1}^{a},w_{2}^{a},\ldots,w_{m}^{a}\right)$ 和 $\left( w_{1}^{b},w_{2}^{b},\ldots,w_{n}^{b} \right)$，输出是$C_{a},C_{b}$对应的属性特征向量 $V_{a}^{Token},V_{b}^{Token}$，整体采用Siamese架构，两个子网络共享权值,从下到上，主要包括预训练辅助词嵌入、Token代码表征两个阶段。
 
 \begin{figure}[H]
   \centering
@@ -131,7 +229,6 @@ AgramsSet初始为空集，在第一次迭代时，得到对应的
 
 经过嵌入阶段的预训练后，每一个Token $w_{i}^{a}$ 都被转换为一个密集向量$x_{i}^{a}$,经过BiLSTM编码后，生成了$h_{i}^{aBiLSTM}$，然后经过Attention层的总结后，生成了$V_{a}^{Token}$作为代码片段$C_{a}$的最终Token表示，即属性特征向量。
 同样，可以使用相同的计算得以$\left( x_{1}^{b},x_{2}^{b},\ldots,x_{n}^{b} \right)$作为输入为代码片段$C_{b}$计算$V_{b}^{Token}$。
-
 
 \section{实验验证}
 \label{sec:Experiment}
@@ -180,7 +277,10 @@ AgramsSet初始为空集，在第一次迭代时，得到对应的
   \end{tabular*}
 \end{table}
 
-得到POJ104数据集后，本文首先对数据集进行初步筛选，去掉其中包含乱码的样本，共得到51485个源代码样本。然后对源代码进行预处理，删除样本中包含的空白行和注释等多余代码，并将数据集保存到一个program.pkl文件中，program.pkl文件中一共包含51485行×3列的数据集，每一行数据代表一个源代码样本，第一列为源代码id，第二列保存源代码样本code，第三列为源代码的标签label，即属于哪一个编程问题。接着，本文随机两两组合同一标签label的源代码，组成5200个真克隆对，随机组合不同标签的源代码组成44800个假克隆对，一共给包含50000个克隆对，并将其保存到oj\_clone\_ids.pkl文件中，oj\_clone\_ids.pkl文件中一共包含50000行×3列的数据集，每一行数据代表一个克隆对样本，第一列为源代码id1，第二列为源代码id2，第三列为克隆对的标签label，真克隆对标签为1，假克隆对标签为0。最后，依据随机种子将数据集按照3：1：1划分为训练集、测试集、验证集，其中的正负样本数如下表\ref{tab:ClonePairs}所示。
+得到POJ104数据集后，本文首先对数据集进行初步筛选，去掉其中包含乱码的样本，共得到51485个源代码样本。然后对源代码进行预处理，通过深入研究并比较现有标记转换规则，发现CCLearner\cite{10.1145/1287624.1287634}对转换规则进行了实验评估，验证各个标记的有效性，因此本文参考CCLearner\cite{10.1145/1287624.1287634}这篇文献的转换规则，对标识符进行了归一化处理。具体的，保留IF、For等关键词，数字常量值用NUM替代，字符串用String替代等。删除样本中包含的空白行和注释等多余代码，并将数据集保存到一个program.pkl文件中，program.pkl文件中一共包含51485行×3列的数据集，每一行数据代表一个源代码样本，第一列为源代码id，第二列保存源代码样本code，第三列为源代码的标签label，即属于哪一个编程问题。
+
+
+接着，本文随机两两组合同一标签label的源代码，组成5200个真克隆对，随机组合不同标签的源代码组成44800个假克隆对，一共给包含50000个克隆对，并将其保存到oj\_clone\_ids.pkl文件中，oj\_clone\_ids.pkl文件中一共包含50000行×3列的数据集，每一行数据代表一个克隆对样本，第一列为源代码id1，第二列为源代码id2，第三列为克隆对的标签label，真克隆对标签为1，假克隆对标签为0。最后，依据随机种子将数据集按照3：1：1划分为训练集、测试集、验证集，其中的正负样本数如下表\ref{tab:ClonePairs}所示。
 
 \begin{table}[H]
   \centering
