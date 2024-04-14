@@ -17,7 +17,7 @@
 
 \subsection{框架概述}
 \label{subsec:TokenOverview}
-本文提出的基于预训练辅助模型的Token表征学习方法的整体框架如图\ref{fig:tokenframework}所示。该框架的输入是代码片段对应的Token序列，输出是对应的属性特征向量，主要包括预训练辅助词嵌入、Token代码表征两个阶段。
+本文提出的基于预训练辅助模型的Token表征学习方法整体框架如图\ref{fig:tokenframework}所示。该框架的输入是代码片段对应的Token序列，输出是对应的属性特征向量，主要包括预训练辅助词嵌入、Token代码表征两个阶段。
 
 \begin{figure}[H]
   \centering
@@ -38,11 +38,11 @@
 
 同时，为了减少集外词OOV问题出现的概率，本文提出了一种相邻单元迭代算法（Adjacent token iterative algorithm，简称ATIA），该算法通过组合Token序列中相邻单元构造新的代码表示单元，然后统计新单元出现的频率，根据频率信息多次迭代，不断更新词汇表。下面对相邻单元迭代算法进行介绍。
 
-具体的，首先将代码数据集中的源代码经过代码预处理，得到对应的Token序列作为初始语料库，代码预处理的工作详见\ref{subsec:Preprocess}节，这里不展开阐述。然后按照代码块组合相邻Token并查找出出现次数最频繁的Token组合，将这个组合称为新的迭代单元（Adjacent gram，简称Agram）。最后将这个Agram当作新的独立单元，加入到词汇表中，而原本组成这个Agram的原始Token单元并不会从词汇表中删除。在第一次迭代的时候，选取相邻的两两Token作为组合，把出现最频繁的Token组合确定为一个Agram单元之后再进行二次迭代，每次迭代在原来的基本单元上再组合一个新的邻近Token作为新的判断单元，不断的进行迭代，每次迭代都要对应的更新词汇表。
+具体地，首先将代码数据集中的源代码经过代码预处理，得到对应的Token序列作为初始语料库，代码预处理的工作详见\ref{subsec:Preprocess}节，这里不展开阐述。然后按照代码块组合相邻Token并查找出出现次数最频繁的Token组合，将这个组合称为新的迭代单元（Adjacent gram，简称Agram）。最后将这个Agram当作新的独立单元，加入到词汇表中，而原本组成这个Agram的原始Token单元并不会从词汇表中删除。在第一次迭代的时候，选取相邻的两两Token作为组合，把出现最频繁的Token组合确定为一个Agram单元之后再进行二次迭代，每次迭代在原来的基本单元上再组合一个新的邻近Token作为新的判断单元，不断的进行迭代，每次迭代都要对应的更新词汇表。
 
-相邻单元迭代算法ATIA的伪代码如\ref{alg1}所示。该算法有两个输入：待处理的初始Token语料库$Corpus$、迭代次数$N$，输出为经过多次迭代后生成的语料库$NewCorpus$，具体包括初始化AgramsSet、计算单元Agram出现的次数、更新语料库3个步骤，每个步骤的作用如下：
+相邻单元迭代算法ATIA的伪代码如\ref{alg1}所示。该算法有两个输入：待处理的初始Token语料库$Corpus$、迭代次数$N$，有两个输出：经过多次迭代后生成的语料库$NewCorpus$、词汇表$Vocab$，具体包括初始化AgramsSet、计算单元Agram出现的次数、更新语料库3个步骤，每个步骤的作用如下：
 
-\begin{algorithm}[ht!]  %ht!参数是调整算法在文章中的位置
+\begin{algorithm}[ht]  
 	\renewcommand{\algorithmicrequire}{\textbf{Input:}}
 	\renewcommand{\algorithmicensure}{\textbf{Output:}}
 	\caption{Iterative algorithm main function}  
@@ -51,149 +51,129 @@
     \Require Tokens Corpus $Corpus$
     \Require The number of iterations $N$
 		\Ensure New Corpus $NewCorpus$
+    \Ensure Vocabulary $Vocab$
     \State $AgramsSet = \varnothing $ 
     \State $NewCorpus \leftarrow Corpus $ 
+    \State $Vocab = \left\{\right\} $  \Comment{step1:初始化}
 		\For{$i \leftarrow 1$ to $N$}
       \If {i == 1}
-        \State $vocab[]$ = token[]
-        \State $ AgramSet \leftarrow set([token\quad for tken in line for line in sentence])$ \Comment{step1:初始化AgramsSet}
+        \For{token in Corpus}
+          \State add adjacent token to AgramsSet
+        \EndFor 
       \Else
-      \State $Atokens(A_i) = learn_algorithm(Token(T_i)) $ 
-      
-      \\ \hspace*{\fill} \\
-
-      \State $Agram = max（Agrams） $ \Comment{计算单元Agram出现的次数}
-      \State $ add Agram to Vocab(V_i)$ \Comment{更新语料库}
+        \State numbers[] = {} 
+        \For{Agram in Aragms}
+          \State Calculate the number of Argram in Corpus 
+          \State add number to numbers \Comment{step2:计算单元Agram出现的次数} 
+        \EndFor 
+        \State $n \leftarrow $ Max(numbers) 
+        \State $MaxAgram \leftarrow$ Agram in Agrams whose number is n
+        \State add $MaxAgram:n$ to Vocab \Comment{step3:更新词汇表}
+        \State add Agram to NewCorpus \Comment{step3:更新语料库}
       \EndIf
     \EndFor \\
-    \Return $NewCorpus$
+    \Return $NewCorpus$，$Vocab$ 
 	\end{algorithmic}
 \end{algorithm}
 
-（1）初始化AgramsSet
-AgramsSet初始为空集，在第一次迭代时，得到对应的
+（1）初始化:首先初始化一个AgramsSet用来存放Token组合，初始化一个词汇表用来存放Token及其出现次数，并且将目前已有的Token语料库$Corpus$添加进$NewCorpus$。
 
-该算法的主要作用是控制算法逻辑，调用其他方法。在算法的第一行大的For循环里控制迭代的次数，每次迭代都需要调用Funtion 2进行具体的处理，获取到Funtion 2返回的的结果，即当前迭代轮次得到的所有Token组合和对应的出现次数（算法第二行），再根据次数选取出出现次数最多的组合（算法第三行），将这个新的组合作为一个新的单元Agram，调用Funtion 3把这个新的单元添加到语料库中（算法第五行）。第一次迭代，组合相邻Token，得到Agram组合并计算这些组合在语料库中出现的次数。首先要初始化一个词典用来存放最终结果（算法第一行），在具体组合过程中，首先把代码按照语句也就是行进行
-分割（算法第二行），然后把这个语句切割为oken 存入一个集合（第三行）。依次遍历这些集合通过组合相邻的token获取新的基本单元（算法第四、五行），
+（2）计算单元Agram出现的次数：多次迭代，在第一次迭代时，组合相邻Token，得到Agram组合，并添加进AragmsSet集合中。遍历语料库，计算AgramsSet中所有的Aragm出现的次数，并且把Aragm组合当作key，组合出现的次数当作对应key的value值保存到词汇表。
 
-（2）计算单元Agram出现的次数 
-
-时遍历语料库获取这些组合在语料库中出现的次数。最后把 token 组合当作 key，组合出现的次数当作对应 key 的 value 值返回给调用函数。
-
-（3）更新语料库
-得到对应的
+（3）更新：遍历AragmsSet中所有的Agram的value值，将频率最高的Agram合并到新语料库中。然后重复（2）、（3）步骤，直到迭代次数N减少为0。
 
 \subsection{Token代码表征设计}
 \label{subsec:Token}
+（1）结构设计
 
-考虑到代码的Token序列是一种序列化输入，在代码表征模型的选取中，本文选择了双向长短期记忆网络BiLSTM模型。BiLSTM模型由一个正向的LSTM模型和一个反向的LSTM模型组成，主要思想是通过把序列向前、向后分别输入给两个独立的递归网络，这两个子网络连接到一个输出层，在每个词的输出部分把两个子网络的输出信息进行整合，这样网络就同时拥有了序列中每个词的过去时刻信息和未来时刻信息。BiLSTM可以捕获到序列前后的关系依赖，将代码片段的Token序列转换为可相互比较的向量。BiLSTM模型的结构如图所示。
-
-
-模型结构设计
-
-本文采用双向长短期记忆（BiLSTM）网络模型，模型的结构如图\ref{fig:BiLSTM}所示。该模型同时在正向、反向两个方向处理数据，从而使神经网络可以同时获取未来和过去的上下文信息，有助于提高模型对Token序列数据的表征能力。
-
+为了提高Token维度代码表征能力，本文选用AttBiLSTM神经网络对上述得到词向量进行建模，具体的模型设计如图\ref{fig:tokenmodel}所示。该模型主要包括输入层、双向长短时记忆层(BiLSTM)和自注意力机制层(Attention)、输出层。
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.75\textwidth]{figures/BiLSTM}
+  \includegraphics[width=0.85\textwidth]{figures/tokenmodel}
+  \caption{Token代码表征：AttBiLSTM模型设计}\label{fig:tokenmodel}
+\end{figure}
+
+\ding{172}输入层：输入层用于向模型输入训练数据，在本方法中模型的输入为经过预训练辅助嵌入模型得到的Token序列词向量，即每个词向量对应一个输入神经元。\ding{173}双向长短时记忆层：由两层LSTM构成，同时捕获序列的双向语义信息。\ding{174}自注意力机制层：本层的主要目的是总结序列的输入特征，并将每个代码片段缩减为一个单一的密集向量。\ding{175}输出层：每个Token序列对应一个输出。
+
+（2）模型选型
+
+考虑到代码的Token序列是一种序列化的输入，并且前后词法单元可能存在依赖关系，目前常见的学习序列中长依赖关系的递归神经网络模型为长短期记忆网络LSTM，其时序结构如下图\ref{fig:LSTM}所示。每一个LSTM单元都有一个细胞状态和三个门（输入、输出、遗忘），通过三个门调节信息的流动，控制输入、自身状态、输出所占的比重，使网络能够在长时间内保留或遗忘信息。
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{figures/LSTM}
+  \caption{LSTM模型时序结构图}\label{fig:LSTM}
+\end{figure}
+
+具体来说，第一步需要接受上一个时间步的隐藏状态$h_{t-1}$和当前时间步的输入数据$x_{t}$,输入遗忘门。遗忘门用来决定在当前时间步的存储状态中传递哪些前一个时间步的信息。具体地，将合并的结果通过矩阵相乘、加偏置、非线性转换，得到一个介于0到1之间的输出值$f_{t}$，通过公式\ref{e3.1}决定是否需要保留和遗忘多少信息，其中$\sigma$表示为非线性激活sigmoid函数，得出的值越接近0越有可能被丢弃，越接近1越有可能被记住。
+\begin{equation}\label{e3.1}
+  \begin{split}
+    f_{t} = \sigma \left(W_{f} \cdot \left[h_{t-1},x_{t}\right] + b_f \right)
+  \end{split}
+\end{equation}
+
+输入门用来确定输入的$x_{t}$中哪些信息能够传递到当前时间步，具体的计算公式如\ref{e3.2}，同时依赖于$tanh$ 和 $sigmoid$函数，得到当前时间步中需要记录的值$\widetilde{C_t}$。
+\begin{equation}\label{e3.2}
+  \begin{split}
+    i_t &= \sigma \left(W_{i} \cdot \left[h_{t-1},x_{t}\right] + b_i\right)
+    \\
+    \widetilde{C_t} &= tanh \left(W_{c} \cdot \left[h_{t-1},x_{t}\right] + b_c \right)
+  \end{split}
+\end{equation}
+
+为了更新新旧细胞的状态，使用公式\ref{e3.3}计算当前时刻细胞的最终状态$C_t$。具体地，用$f_{t}$来控制丢弃旧细胞信息，同时加上新的重要信息。
+\begin{equation}\label{e3.3}
+  \begin{split}
+   C_t = f_t \otimes C_{t-1} + i_t \otimes \widetilde{C_t}
+  \end{split}
+\end{equation}
+
+输出门用来确定当前时间步的信息有多少能够传递到下一个时间步，具体的计算公式如\ref{e3.4}。
+\begin{equation}\label{e3.4}
+  \begin{split}
+   out_t &= \sigma \left(W_{out} \cdot \left[h_{t-1},x_{t}\right] + b_o \right)
+   \\
+   h_t &= out_t \otimes tanh \left(C_t\right)
+  \end{split}
+\end{equation}
+
+通过上述三个门的时序操作，最终得到长期状态$C_t$和短期记忆$h_t$。长期状态$C_t$从左到右经过LSTM单元，通过遗忘门丢失一些前时间步信息，通过输入门添加当前时间步信息，最后通过输出门输出。但LSTM模型存在一个问题，即无法获取从后往前的信息。
+
+为了更好地提高模型对Token序列数据的表征能力，本文选择了双向长短期记忆网络BiLSTM模型来进行Token代码表征，模型的结构如图\ref{fig:BiLSTM}所示。BiLSTM模型由一个正向的LSTM模型和一个反向的LSTM模型组成，主要思想是通过把序列向前、向后分别输入给两个独立的递归网络，这两个子网络连接到一个输出层，在每个词的输出部分把两个子网络的输出信息进行整合，这样网络就同时拥有了序列中每个词的过去时刻信息和未来时刻信息，更全面地捕捉序列信息，从而提高模型的性能。BiLSTM可以捕获到序列前后的关系依赖，将代码片段的Token序列转换为可相互比较的向量。
+\begin{figure}[H] 
+  \centering
+  \includegraphics[width=0.6\textwidth]{figures/BiLSTM}
   \caption{BiLSTM模型结构图}\label{fig:BiLSTM}
 \end{figure}
 
-令BiLSTM的$t$时刻的前向隐藏状态为$\overrightarrow{h_t}$，向前输出为$\overrightarrow{y_t}$，向后隐藏状态为$\overrightarrow{h_t}$，向后输出为$\overleftarrow{y_t}$，输出层参数是$W_0$与$b_0$，则$\overrightarrow{y_t}$和$\overleftarrow{y_t}$分别表示为：
-
-\begin{equation}\label{e9}
+令BiLSTM的$t$时刻的前向隐藏状态为$\overrightarrow{h_t}$，向前输出为$\overrightarrow{y_t}$，向后隐藏状态为$\overrightarrow{h_t}$，向后输出为$\overleftarrow{y_t}$，输出层参数是$W_0$与$b_0$，则当前状态$\overrightarrow{y_t}$和$\overleftarrow{y_t}$可以通过公式\ref{e3.5}计算.
+\begin{equation}\label{e3.5}
   \begin{split}
-    \overrightarrow{y_t} = W_0 \cdot LSTM\left(x_{t},\overrightarrow{h_{t-1}}\right) + b_0
+    \overrightarrow{y_t} &= W_0 \cdot LSTM\left(x_{t},\overrightarrow{h_{t-1}}\right) + b_0
+    \\
+    \overleftarrow{y_t} &= W_0 \cdot LSTM\left(x_{t},\overleftarrow{h_{t-1}}\right) + b_0
   \end{split}
 \end{equation}
 
-\begin{equation}\label{e9}
+对当前状态$\overrightarrow{y_t}$和$\overleftarrow{y_t}$进行拼接可以得到当前$t$时刻的最终输出$y_t$，如公式\ref{e3.6}所示。
+\begin{equation}\label{e3.6}
   \begin{split}
-    \overleftarrow{y_t} = W_0 \cdot LSTM\left(x_{t},\overleftarrow{h_{t+1}}\right) + b_0
+    y_t = \overrightarrow{y_t} \oplus\overleftarrow{y_t}
   \end{split}
 \end{equation}
-
-输入层
-
-代码表示层
-
-输出层
-
-
-将token序列对应的向量输入到Bi LSTM网络中，经过Bi LSTM学习哪些信息应该被记住哪些信息应该被遗忘，最终得到每个基本单元包含语义信息和上下文信息的向量表示。
 
 \section{Token表征方法具体实现}
 \label{sec:achieve}
-
-% \lstset{language=C}
-% \begin{lstlisting}
-%     /* Count the sum of elements in an array */
-%     #include <stdio.h>
-    
-%     int main()
-%     {
-%         int i = 0;//parameter one
-%         int data[5]={1,2,3,4,5};//parameter two
-%         int result = 0;//parameter three
-        
-%         for(;i<5;i++)
-%         {
-%             result += data[i];
-%         }
-%         printf("%d",result); 
-%         return 0;
-%     }
-% \end{lstlisting}
-
-% \lstset{language=C}
-% \begin{lstlisting}
-%     /* Count the sum of elements in an array */
-%     #include <stdio.h>
-    
-%     int main()
-%     {
-%         int i = 0;//parameter one
-%         int data[5]={1,2,3,4,5};//parameter two
-%         int result = 0;//parameter three
-%         while(i<5)
-%         {
-%             result += data[i];
-%             i++;
-%         }
-%         printf("%d",result); 
-%         return 0;
-%     }
-    
-% \end{lstlisting}
-
-在介绍Token表征方法具体实现之前，本文首先给出示例源代码片段图\ref{fig:code}，其中，图\ref{fig:code1}和图\ref{fig:code2}是两个简单的代码片段，函数的主要功能为：计算$Data$数组的元素之和，其中图\ref{fig:code1}的第10-13行采用for循环，图\ref{fig:code2}的第9-13行采用while循环，这两个代码片段属于真克隆对。
-\begin{figure}[htbp]
-  \centering  %居中
-  \subfigure[C语言代码片段$C_{a}$]{   %第一张子图
-      \centering    %子图居中
-      \includegraphics[width=0.45\textwidth]{figures/code1}  %以pic.jpg的0.5倍大小输出
-      \label{fig:code1} %引用标签
-  }
-  \subfigure[C语言代码片段$C_{b}$]{ %第二张子图
-      \centering    %子图居中
-      \includegraphics[width=0.45\textwidth]{figures/code2}%以pic.jpg的0.5倍大小输出
-      \label{fig:code2} %引用标签
-  }
-  \caption{C语言代码片段示例}    %大图名称
-  \label{fig:code}    %图片引用标记
-\end{figure}
-
-经过\ref{subsec:Preprocess}小节代码预处理，可以得到示例代码片段$C_{a},C_{b}$对应的Token序列，如图\ref{fig:tokencode}所示。
-\begin{figure}[htbp]
+在介绍具体实现之前，本节首先给出Token表征方法的输入：经过\ref{subsec:Preprocess}小节的代码预处理阶段，得到示例代码片段\ref{fig:code}中$C_{a},C_{b}$对应的Token序列，如图\ref{fig:tokencode}所示。
+\begin{figure}[H] 
   \centering  %居中
   \subfigure[C语言代码片段$C_{a}$对应的Token序列]{   %第一张子图
       \centering    %子图居中
-      \includegraphics[width=0.45\textwidth]{figures/token1}  %以pic.jpg的0.5倍大小输出
+      \includegraphics[width=0.4\textwidth]{figures/token1} 
       \label{fig:token1} %引用标签
   }
   \subfigure[C语言代码片段$C_{b}$对应的Token序列]{ %第二张子图
       \centering    %子图居中
-      \includegraphics[width=0.45\textwidth]{figures/token2}%以pic.jpg的0.5倍大小输出
+      \includegraphics[width=0.4\textwidth]{figures/token2}
       \label{fig:token2} %引用标签
   }
   \caption{示例源代码对应的Token序列}    %大图名称
@@ -204,13 +184,13 @@ AgramsSet初始为空集，在第一次迭代时，得到对应的
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.95\textwidth]{figures/token}
+  \includegraphics[width=0.9\textwidth]{figures/token}
   \caption{基于预训练辅助模型的Token表征学习方法实现}\label{fig:token}
 \end{figure}
 
-具体的，在预训练辅助词嵌入阶段，对于代码片段$C_{a}$，经过分割得到的Token序列$\left( w_{1}^{a},w_{2}^{a},\ldots,w_{m}^{a}\right)$，（$m$是代码片段A的长度），然后在词汇表$E_{w}$中查找每个Token对应的向量，将所有的token $w_{i}^{a} \left(i \in [1,m]\right)$ 转化为密集向量。其中查找词汇表$E_{w}$已经经过代码语料库使用相邻单元迭代算法ATIA基于Word2vec模型进行预训练，在模型中是固定的。其查找过程可以表示为公式\ref{e9}：
+具体来说，在预训练辅助词嵌入阶段，对于代码片段$C_{a}$，经过分割得到的Token序列$\left( w_{1}^{a},w_{2}^{a},\ldots,w_{m}^{a}\right)$，（$m$是代码片段A的长度），然后在词汇表$E_{w}$中查找每个Token对应的向量，将所有的token $w_{i}^{a} \left(i \in [1,m]\right)$ 转化为密集向量。其中查找词汇表$E_{w}$已经经过代码语料库使用相邻单元迭代算法ATIA基于Word2vec模型进行预训练，在模型中是固定的。其查找过程可以表示为公式\ref{e3.7}：
 
-\begin{equation}\label{e9}
+\begin{equation}\label{e3.7}
   \begin{split}
   x_{i}^{a} = lookup \left(w_{i}^{a} ,E_{w} \right)
   \end{split}
@@ -218,9 +198,9 @@ AgramsSet初始为空集，在第一次迭代时，得到对应的
 
 经过嵌入阶段的预训练后，代码片段$C_{a}$生成了序列$\left( x_{1}^{a},x_{2}^{a},\ldots,x_{m}^{a}\right)$。使用同样的嵌入方式，可以得到对于Token序列$\left( w_{1}^{b},w_{2}^{b},\ldots,w_{n}^{b}\right)$，（$n$是代码片段B的长度）的向量表示$\left( x_{1}^{b},x_{2}^{b},\ldots,x_{n}^{b} \right)$。
 
-在Token代码表征阶段，将代码向量的Token序列作为输入，使用BiLSTM模型进行编码。处理过程分为两个步骤，如公式\ref{e10}所示：
+在Token代码表征阶段，将代码向量的Token序列作为输入，使用BiLSTM模型进行编码。处理过程分为两个步骤，如公式\ref{e3.8}所示：
 
-\begin{equation}\label{e10}
+\begin{equation}\label{e3.8}
   \begin{split}
     h_{1}^{aBiLSTM},h_{2}^{aBiLSTM},\ldots,h_{n}^{aBiLSTM} = BiLSTM \left(x_{1}^{a},x_{2}^{a},\ldots,x_{m}^{a}\right) \\
     V_{a}^{Token} = Attention \left( h_{1}^{aBiLSTM},h_{2}^{aBiLSTM},\ldots,h_{n}^{aBiLSTM} \right)
@@ -237,12 +217,11 @@ AgramsSet初始为空集，在第一次迭代时，得到对应的
 \subsection{实验环境}
 \label{subsec:Environment}
 本章的实验验证均运行于Linux系统下，其系统硬件配置如表\ref{tab:environment}所示。
-
 \begin{table}[H]
   \centering
   \caption{实验环境配置} 
   \label{tab:environment}
-  \begin{tabular*}{0.6\textwidth}{@{\extracolsep{\fill}}cc}
+  \begin{tabular*}{0.5\textwidth}{@{\extracolsep{\fill}}cc}
   \toprule
     环境			&配置		\\
   \midrule
@@ -263,7 +242,7 @@ AgramsSet初始为空集，在第一次迭代时，得到对应的
   \centering
   \caption{POJ104数据集} 
   \label{tab：dataset}
-  \begin{tabular*}{0.6\textwidth}{@{\extracolsep{\fill}}cc}
+  \begin{tabular*}{0.5\textwidth}{@{\extracolsep{\fill}}cc}
   \toprule
     代码			&属性		\\
   \midrule
@@ -277,12 +256,11 @@ AgramsSet初始为空集，在第一次迭代时，得到对应的
   \end{tabular*}
 \end{table}
 
-得到POJ104数据集后，本文首先对数据集进行初步筛选，去掉其中包含乱码的样本，共得到51485个源代码样本。然后对源代码进行预处理，通过深入研究并比较现有标记转换规则，发现CCLearner\cite{10.1145/1287624.1287634}对转换规则进行了实验评估，验证各个标记的有效性，因此本文参考CCLearner\cite{10.1145/1287624.1287634}这篇文献的转换规则，对标识符进行了归一化处理。具体的，保留IF、For等关键词，数字常量值用NUM替代，字符串用String替代等。删除样本中包含的空白行和注释等多余代码，并将数据集保存到一个program.pkl文件中，program.pkl文件中一共包含51485行×3列的数据集，每一行数据代表一个源代码样本，第一列为源代码id，第二列保存源代码样本code，第三列为源代码的标签label，即属于哪一个编程问题。
-
+得到POJ104数据集后，本文首先对数据集进行初步筛选，去掉其中包含乱码的样本，共得到51485个源代码样本。然后对源代码进行预处理，通过深入研究并比较现有标记转换规则，发现CCLearner\cite{10.1145/1287624.1287634}对转换规则进行了实验评估，验证各个标记的有效性，因此本文参考CCLearner\cite{10.1145/1287624.1287634}这篇文献的转换规则，对标识符进行了归一化处理。具体地，保留IF、For等关键词，数字常量值用NUM替代，字符串用String替代等。删除样本中包含的空白行和注释等多余代码，并将数据集保存到一个program.pkl文件中，program.pkl文件中一共包含51485行×3列的数据集，每一行数据代表一个源代码样本，第一列为源代码id，第二列保存源代码样本code，第三列为源代码的标签label，即属于哪一个编程问题。
 
 接着，本文随机两两组合同一标签label的源代码，组成5200个真克隆对，随机组合不同标签的源代码组成44800个假克隆对，一共给包含50000个克隆对，并将其保存到oj\_clone\_ids.pkl文件中，oj\_clone\_ids.pkl文件中一共包含50000行×3列的数据集，每一行数据代表一个克隆对样本，第一列为源代码id1，第二列为源代码id2，第三列为克隆对的标签label，真克隆对标签为1，假克隆对标签为0。最后，依据随机种子将数据集按照3：1：1划分为训练集、测试集、验证集，其中的正负样本数如下表\ref{tab:ClonePairs}所示。
 
-\begin{table}[H]
+\begin{table}
   \centering
   \caption{本文预处理后的POJ104数据集正负样本数} 
   \label{tab:ClonePairs}
