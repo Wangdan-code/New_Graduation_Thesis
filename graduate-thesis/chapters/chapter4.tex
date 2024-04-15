@@ -21,20 +21,23 @@
 \section{AST表征方法具体实现}
 \label{sec:achieve}
 
-在介绍具体实现之前，本节首先给出AST表征方法的输入：经过\ref{subsec:Preprocess}小节的代码预处理阶段，得到示例代码片段\ref{fig:code}中$C_{a},C_{b}$对应的抽象语法树，如图\ref{fig:astcode}所示。
+在介绍具体实现之前，本节首先给出AST表征方法的输入：经过\ref{subsec:Preprocess}小节的代码预处理阶段，得到示例代码片段\ref{fig:code}对应的抽象语法树，如图\ref{fig:astcode}所示。
 \begin{figure}[htbp]
   \centering  %居中
-  \subfigure[C语言代码片段$C_{a}$对应的AST]{   %第一张子图
+  \subfigure[代码片段1对应的AST]{   %第一张子图
       \centering    %子图居中
-      \includegraphics[width=0.85\textwidth]{figures/ast1}  
+      \includegraphics[width=0.3\textwidth]{figures/ast1}  
       \label{fig:ast1} %引用标签
   }
-  \qquad
-	%让图片换行，
-  \subfigure[C语言代码片段$C_{b}$对应的AST]{ %第二张子图
+  \subfigure[代码片段2对应的AST]{ %第二张子图
       \centering    %子图居中
-      \includegraphics[width=0.85\textwidth]{figures/ast2}
+      \includegraphics[width=0.3\textwidth]{figures/ast2}
       \label{fig:ast2} %引用标签
+  }
+  \subfigure[代码片段3对应的AST]{ %第三张子图
+      \centering    %子图居中
+      \includegraphics[width=0.3\textwidth]{figures/ast3}
+      \label{fig:ast3} %引用标签
   }
   \caption{示例源代码对应的抽象语法树}    %大图名称
   \label{fig:astcode}    %图片引用标记

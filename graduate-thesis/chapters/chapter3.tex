@@ -141,7 +141,7 @@
 为了更好地提高模型对Token序列数据的表征能力，本文选择了双向长短期记忆网络BiLSTM模型来进行Token代码表征，模型的结构如图\ref{fig:BiLSTM}所示。BiLSTM模型由一个正向的LSTM模型和一个反向的LSTM模型组成，主要思想是通过把序列向前、向后分别输入给两个独立的递归网络，这两个子网络连接到一个输出层，在每个词的输出部分把两个子网络的输出信息进行整合，这样网络就同时拥有了序列中每个词的过去时刻信息和未来时刻信息，更全面地捕捉序列信息，从而提高模型的性能。BiLSTM可以捕获到序列前后的关系依赖，将代码片段的Token序列转换为可相互比较的向量。
 \begin{figure}[H] 
   \centering
-  \includegraphics[width=0.6\textwidth]{figures/BiLSTM}
+  \includegraphics[width=0.65\textwidth]{figures/BiLSTM}
   \caption{BiLSTM模型结构图}\label{fig:BiLSTM}
 \end{figure}
 
@@ -163,28 +163,33 @@
 
 \section{Token表征方法具体实现}
 \label{sec:achieve}
-在介绍具体实现之前，本节首先给出Token表征方法的输入：经过\ref{subsec:Preprocess}小节的代码预处理阶段，得到示例代码片段\ref{fig:code}中$C_{a},C_{b}$对应的Token序列，如图\ref{fig:tokencode}所示。
+在介绍具体实现之前，本节首先给出Token表征方法的输入：经过\ref{subsec:Preprocess}小节的代码预处理阶段，得到示例代码片段\ref{fig:code}对应的Token序列，如图\ref{fig:tokencode}所示。
 \begin{figure}[H] 
   \centering  %居中
-  \subfigure[C语言代码片段$C_{a}$对应的Token序列]{   %第一张子图
+  \subfigure[代码片段1对应的Token序列]{   %第一张子图
       \centering    %子图居中
-      \includegraphics[width=0.4\textwidth]{figures/token1} 
+      \includegraphics[width=0.3\textwidth]{figures/token1} 
       \label{fig:token1} %引用标签
   }
-  \subfigure[C语言代码片段$C_{b}$对应的Token序列]{ %第二张子图
+  \subfigure[代码片段2对应的Token序列]{ %第二张子图
       \centering    %子图居中
-      \includegraphics[width=0.4\textwidth]{figures/token2}
+      \includegraphics[width=0.3\textwidth]{figures/token2}
       \label{fig:token2} %引用标签
+  }
+  \subfigure[代码片段3对应的Token序列]{ %第三张子图
+      \centering    %子图居中
+      \includegraphics[width=0.3\textwidth]{figures/token3}
+      \label{fig:token3} %引用标签
   }
   \caption{示例源代码对应的Token序列}    %大图名称
   \label{fig:tokencode}    %图片引用标记
 \end{figure}
 
-接下来，本章提出的基于预训练辅助模型的Token表征学习方法的实现如图\ref{fig:token}所示。该方法的输入是代码片段$C_{a},C_{b}$对应的Token序列，表示为$\left( w_{1}^{a},w_{2}^{a},\ldots,w_{m}^{a}\right)$ 和 $\left( w_{1}^{b},w_{2}^{b},\ldots,w_{n}^{b} \right)$，输出是$C_{a},C_{b}$对应的属性特征向量 $V_{a}^{Token},V_{b}^{Token}$，整体采用Siamese架构，两个子网络共享权值,从下到上，主要包括预训练辅助词嵌入、Token代码表征两个阶段。
+接下来，本章提出的基于预训练辅助模型的Token表征学习方法的实现如图\ref{fig:token}所示。该方法的输入是一对代码片段$C_{a},C_{b}$对应的Token序列，表示为$\left( w_{1}^{a},w_{2}^{a},\ldots,w_{m}^{a}\right)$ 和 $\left( w_{1}^{b},w_{2}^{b},\ldots,w_{n}^{b} \right)$，输出是$C_{a},C_{b}$对应的属性特征向量 $V_{a}^{Token},V_{b}^{Token}$，整体采用Siamese架构，两个子网络共享权值,从下到上，主要包括预训练辅助词嵌入、Token代码表征两个阶段。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\textwidth]{figures/token}
+  \includegraphics[width=0.8\textwidth]{figures/token}
   \caption{基于预训练辅助模型的Token表征学习方法实现}\label{fig:token}
 \end{figure}
 
@@ -212,7 +217,7 @@
 
 \section{实验验证}
 \label{sec:Experiment}
-为了验证基于预训练辅助模型的Token表征方法的有效性，本节展开实验验证。首先，介绍了实验整体的环境配置、数据集，以及实验评估；接着，对基于预训练模型的Token表征方法进行了消融实验。
+为了验证基于预训练辅助模型的Token表征方法的有效性，本节展开实验验证。首先，介绍了实验整体的环境配置、数据集，以及实验评估指标；接着，对基于预训练模型的Token表征方法进行了消融实验。
 
 \subsection{实验环境}
 \label{subsec:Environment}
@@ -236,7 +241,7 @@
 
 \subsection{实验数据集}
 \label{subsec:Dataset}
-为了验证预训练辅助模型在Token层面上表征学习的有效性，本文面向代码克隆检测任务对预训练辅助模型进行分析和评估，选取的实验数据为POJ104数据集。如表\ref{tab：dataset}所示，POJ104数据集是一个基于C语言所构建的大型数据集。OJ系统是一个以编程教学为目的公开评判系统，共存在104个编程问题，针对每个编程问题，学生们通过在线提交自己的代码来尝试解决，同时OJ系统将自动判断提交源代码的正确性和有效性。对于OJ系统中同一个编程问题来说，其所有正确提交的代码都为克隆代码，对于不同的编程问题所提交的代码，即为非克隆代码。POJ104数据集针对每一个编程问题，均提供500个学生提交源代码，即共有52000个样本。
+为了验证预训练辅助模型在Token层面上表征学习的有效性，本文面向代码克隆检测任务对预训练辅助模型进行分析和评估，选取的实验数据为POJ104数据集。如表\ref{tab：dataset}所示，POJ104数据集是一个基于C语言所构建的大型数据集。OJ系统是一个以编程教学为目的公开评判系统，共存在104个编程问题，针对每个编程问题，学生们通过在线提交自己的代码来尝试解决，同时OJ系统将自动判断提交源代码的正确性和有效性。对于OJ系统来说，同一个问题的不同答案可以看作一对真克隆对，不同问题的答案可以视为一对假克隆对。POJ104数据集针对每一个编程问题，均提供500个学生提交源代码，即共有52000个样本。
 
 \begin{table}[H]
   \centering
@@ -278,7 +283,7 @@
 
 \subsection{评估指标}
 \label{subsec:Index}
-代码克隆检测问题是二分类问题，因此本文采用准确率（Accuracy）、精确率（Precision）、召回率（Recall）、F1值四个评估指标来度量实验结果，其中使用了混淆矩阵中的TP、FN、FP、TN，如表\ref{tab:ConfusionMatrix}所示。
+代码克隆检测问题是二分类问题，因此本文采用精确率（Precision）、召回率（Recall）、F1值三个评估指标来度量实验结果，其中使用了混淆矩阵中的TP、FN、FP、TN，如表\ref{tab:ConfusionMatrix}所示。
 
 \begin{table}[H]
   \centering
@@ -287,6 +292,7 @@
   \begin{tabular*}{0.7\textwidth}{@{\extracolsep{\fill}}ccc}
   \toprule
   \multirow{2}{*}{实际值} & \multicolumn{2}{c}{预测值} \\
+  \cmidrule{2-3} 
   \multirow{2}{*}{} & 正样本(P) & 负样本(N) \\
   \midrule
     正样本(P)			&TP	  &FN		 \\
@@ -305,11 +311,6 @@
  
 真阴性(True Negative, TN)：样本实际为负样本，并且被模型预测为负样本，即实际上标记为假克隆对并且被检测出来为假克隆对的代码对。
 
-准确率（Accuracy）表示预测为正的样本中真实值为正的比率，计算公式如\ref{e5}所示：
-\begin{equation}\label{e5}
-  Accuracy = \frac{TP+TN}{TP+FN+FP+TN} 
-\end{equation}
-
 精确率（Precision）表示正确检测到的代码克隆数量占全部预测为代码克隆的比例，计算公式如\ref{e6}所示：
 \begin{equation}\label{e6}
   Precision = \frac{TP}{TP+FP} 
@@ -325,24 +326,72 @@
   F1 = \frac{2*Precision*Recall}{Precision+Recall} 
 \end{equation}
 
-\subsection{预训练辅助模型消融实验结果}
-消融对比实验：体现改进的辅助模型的有效性，如图\ref{tab:category}
-基于Token的Bi LSTM
-基于Token的+预训练辅助模型的Bi LSTM
+\subsection{实验结果}
 
-\begin{table}[H]
-  \centering
-  \caption{预训练辅助模型实验结果} 
-  \label{tab:category}
-  \begin{tabular*}{0.8\textwidth}{@{\extracolsep{\fill}}cccc}
-  \toprule
-    对比			&P		&R		&F1 \\
-  \midrule
-    基于Token的Bi LSTM			&0.xx	&0.xx		&0.xx \\
-    基于Token的+预训练辅助模型的Bi LSTM			&0.xx		&0.xx		&0.xx \\
-  \bottomrule
-  \end{tabular*}
+（1） 预训练语料库规模的实验结果
+
+为了探究预训练语料库规模对Token表征实验结果的影响，本文选取POJ104数据集中部分数据进行预训练，基于相邻单元迭代算法构造预训练语料库。具体地，在\ref{subsec:Dataset}数据库中随机选取了100对、200对、500对代码克隆对作为预训练数据集，构造预训练语料库，对Token表征模型进行预训练。具体实验结果如表\ref{tab:category}所示。
+
+\begin{table}[H]  
+  \centering  
+  \caption{预训练语料库规模对实验结果的影响}   
+  \label{tab:category}  
+  \begin{tabular*}{0.9\textwidth}{@{\extracolsep{\fill}}ccccc}  
+  \toprule  
+  预训练数据集规模 &词表长度 & 准确率(\%) & 召回率(\%) & F1值(\%)  \\  
+  \midrule 
+  100对	&231		& xxx	& xxx	& xxx		 \\  
+  300对	&444		& xxx	& xxx	& xxx		\\  
+  500对	&600 	& 89.74	& 87.84	& 88.78	\\  
+  \bottomrule  
+  \end{tabular*}  
 \end{table}
+从表\ref{tab:category}可以看出, 随着预训练语料库的增大, 代码克隆检测任务的F1值呈现上升趋势, 即对代码克隆的检测效果会不断增强。考虑到需要预留出足够的答案样本用来构造训练集和测试集, 最终选择500对作为C语言实验中的预训练数据集大小。
+
+（2） Token表征模型实验结果
+
+为了探究Token表征模型AttBiLSTM对实验结果的影响，本文基于预训练辅助的基础上，将AttBiLSTM模型与LSTM与BiLSTM模型进行对比，结果如表\ref{tab:category2}所示。其中LSTM模型基于Pytorch1.10实现
+
+AttBiLSTM模型基于pytorch实现，其参数设置为下表：
+
+词嵌入层：将大小为600的词汇表映射到128维的向量空间。
+双向LSTM层：双向的LSTM单元堆叠而成，输入特征的维度与嵌入层匹配为104层，隐藏层维度设置104，由于设置为双向，因此输出维度为104*2=208层。
+全连接层：208层的输入映射到1维的输出中
+sigmoid层：激活函数，将全连接层的输出转换到0到1之间的概率值。
+
+
+
+
+
+
+
+模型的优化器为Adam优化器，学习率设置为0.0001，dropout 为0.1，epochs
+为150，参数的确定是通过多次调试后选择最优参数作为最后的结果。
+
+
+
+
+Tensorflow[62] 和Keras[63] 实现，其中Tensorflow
+作为后端，前端通过调用Keras 的API 接口来搭建Sequential 顺序模型。整个多任务
+模型的实现包括输入层、共享层、任务分支解码器和输出层，具体模型层次设置如
+表3.1所示。
+
+\begin{table}[H]  
+  \centering  
+  \caption{Token表征模型对实验结果的影响(\%)}   
+  \label{tab:category2}  
+  \begin{tabular*}{0.9\textwidth}{@{\extracolsep{\fill}}cccc}  
+  \toprule  
+  表征模型 & 准确率(\%) & 召回率(\%) & F1值(\%)  \\  
+  \midrule  
+  LSTM			& xxx	& xxx	& xxx		 \\  
+  BiLSTM			& xxx	& xxx	& xxx		 \\  
+  AttBiLSTM			& 89.74	& 87.84	& 88.78		\\  
+  \bottomrule  
+  \end{tabular*}  
+\end{table}
+从表\ref{tab:category}可以看出, 随着预训练语料库的增大, 克隆检测任务的F1值呈现上升趋势, 即对代码克隆的检测效果会不断增强. 考虑到需要预留出足够的答案样本用来构造训练集和测试集, 最终选择AttBiLSTM模型作为Token表征模型。
+
 
 \section{本章小结}
 \label{sec:Summary3}

@@ -1,0 +1,10 @@
+digraph "main" {  
+"27" [label = <(&lt;operator&gt;.lessThan,i&lt;5)<SUB>6</SUB>> ]
+"31" [label = <(&lt;operator&gt;.assignmentPlus,result += data[i])<SUB>8</SUB>> ]
+"36" [label = <(&lt;operator&gt;.postIncrement,i++)<SUB>9</SUB>> ]
+"33" [label = <(&lt;operator&gt;.indirectIndexAccess,data[i])<SUB>8</SUB>> ]
+  "27" -> "33" 
+  "27" -> "36" 
+  "27" -> "27" 
+  "27" -> "31" 
+}

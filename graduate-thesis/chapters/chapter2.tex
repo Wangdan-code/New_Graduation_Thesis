@@ -89,18 +89,23 @@ RLCCD框架的核心步骤是源代码表征学习，其目标是学习能够表
 \section{RLCCD定义描述}
 \label{sec:RLCCD flow}
 
-为了更形象地描述代码克隆检测问题，本节首先给出示例源代码片段\ref{fig:code}，其中，图\ref{fig:code1}和图\ref{fig:code2}是两个简单的代码片段，函数的主要功能为：计算$Data$数组的元素之和，其中图\ref{fig:code1}的第10-13行采用for循环，图\ref{fig:code2}的第9-13行采用while循环，这两个代码片段属于真克隆对。
+为了更形象地描述代码克隆检测问题，本节首先给出示例源代码片段\ref{fig:code}，其中，图\ref{fig:code1}、图\ref{fig:code2}、图\ref{fig:code3}是三个简单的代码片段，函数的主要功能为：计算$Data$数组的元素之和，其中图\ref{fig:code1}的第10-13行采用for循环，图\ref{fig:code2}的第9-13行采用while循环，这两个代码片段属于真克隆对；图\ref{fig:code2}的第9-14行采用for循环，但在内部需要判断result的现有状态，因此图\ref{fig:code1}和图\ref{fig:code3}的代码片段属于假克隆对。
 \begin{figure}[H] 
   \centering  %居中
-  \subfigure[C语言代码片段$C_{a}$]{   %第一张子图
+  \subfigure[C语言代码片段1]{   %第一张子图
       \centering    %子图居中
-      \includegraphics[width=0.45\textwidth]{figures/code1}
+      \includegraphics[width=0.3\textwidth]{figures/code1}
       \label{fig:code1} %引用标签
   }
-  \subfigure[C语言代码片段$C_{b}$]{ %第二张子图
+  \subfigure[C语言代码片段2]{ %第二张子图
       \centering    %子图居中
-      \includegraphics[width=0.45\textwidth]{figures/code2}
+      \includegraphics[width=0.3\textwidth]{figures/code2}
       \label{fig:code2} %引用标签
+  }
+  \subfigure[C语言代码片段3]{ %第三张子图
+      \centering    %子图居中
+      \includegraphics[width=0.3\textwidth]{figures/code3}
+      \label{fig:code3} %引用标签
   }
   \caption{C语言代码片段示例}    %大图名称
   \label{fig:code}    %图片引用标记
@@ -144,6 +149,27 @@ RLCCD框架的核心步骤是源代码表征学习，其目标是学习能够表
 %         return 0;
 %     }
     
+% \end{lstlisting}
+
+% \lstset{language=C}
+% \begin{lstlisting}
+%     /* Count the sum of elements in an array */
+%     #include <stdio.h>
+    
+%     int main()
+%     {
+%         int i = 0;//parameter one
+%         int data[5]={1,2,3,4,5};//parameter two
+%         int result = 0;//parameter three
+%         for(;i<5;i++)
+%         {
+%             if(result < 10){
+%                 result += data[i];
+%             }
+%         }
+%         printf("%d",result); 
+%         return 0;
+%     }
 % \end{lstlisting}
 
 给定两个代码片段$C_{a},C_{b}$，使用一个三元组$(C_{a},C_{b},y_{ab})$的形式来表示一对代码片段，其中$y_{ab}$表示标签。如果$(C_{a},C_{b})$是一个克隆对，那么$y_{ab}$为1，否则$y_{ab}$为0。从$n$个代码片段中构建一个带有标签的训练集$\left\{(C_{a},C_{b},y_{ab})|a,b \in n,a<b\right\}$，本文的目的是训练一个深度学习模型来学习一个可以把代码$C$映射成一个特征向量$V$的函数$f$。对于任意代码片段，计算出他们的相似度分数$S_{ab} = f(C_{a},C_{b})$并进行分类，使其分类结果尽可能接近已知的标签$y_{ab}$。在预测阶段，为了推断出两个代码片段是否是克隆对，在真假克隆对之间设置了一个阈值$k$，如果预测的相似度分数大于$k$值，那么认为两个代码片段是真克隆对，否则，认为它们是假克隆对。其中，训练一个深度学习模型将代码$C$映射成一个特征向量$V$的过程，可以视为代码表征学习的数值化过程，也是本文研究的重点。

@@ -1,0 +1,19 @@
+digraph "&lt;operator&gt;.arrayInitializer" {  
+"70" [label = <(METHOD,&lt;operator&gt;.arrayInitializer)> ]
+"77" [label = <(METHOD_RETURN,ANY)> ]
+"71" [label = <(PARAM,p1)> ]
+"72" [label = <(PARAM,p2)> ]
+"73" [label = <(PARAM,p3)> ]
+"74" [label = <(PARAM,p4)> ]
+"75" [label = <(PARAM,p5)> ]
+  "71" -> "77"  [ label = "p1"] 
+  "72" -> "77"  [ label = "p2"] 
+  "73" -> "77"  [ label = "p3"] 
+  "74" -> "77"  [ label = "p4"] 
+  "75" -> "77"  [ label = "p5"] 
+  "70" -> "71" 
+  "70" -> "72" 
+  "70" -> "73" 
+  "70" -> "74" 
+  "70" -> "75" 
+}
