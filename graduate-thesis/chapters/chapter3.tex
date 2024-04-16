@@ -3,9 +3,9 @@
 本章主要对本文提出的基于预训练辅助模型的Token表征学习方法进行详细介绍，首先介绍其研究动机，接着阐述其方法设计，以及具体的实现过程，最后介绍实验验证过程和结果。
 
 \section{研究动机}
-\label{sec:Motivation}
+\label{sec:TokenMotivation}
 
-基于Token的代码表征方法本质上就是将源代码转换为一系列词法单元Token组成的序列，并对Token序列进行代码分析。类似于自然语言技术处理文本，由于源代码中存在大量用户自己定义的标识符，不同用户的命名习惯不同，在对源代码的词法单元建模时，会产生一个规模巨大且稀疏的词汇表。该词汇表的规模会直接影响代码分析任务的效率，因此现有方法大多都对Token进行规范化，比如将变量名用统一的标识符来代替，从而降低词汇表的规模。但是后续神经网络模型训练过程中，当出现某个词汇在词汇表中没有出现过，那么神经网络模型就无法对齐建模，即出现了在词汇表中不存在的Token，集外词（Out-of-vocabulary，简称OOV）问题。有研究\cite{RJXB202205011}发现，针对代码表征中的集外词问题，在经典BigcloneBench\cite{7332459}数据集中OOV比率高达62.68\%，在OJClone数据集\cite{WOS:000485474201046}中OOV比率达到了16.82\%。
+基于Token的代码表征方法本质上就是将源代码转换为一系列词法单元Token组成的序列，并对Token序列进行代码分析。类似于自然语言技术处理文本，由于源代码中存在大量用户自己定义的标识符，不同用户的命名习惯不同，在对源代码的词法单元建模时，会产生一个规模巨大且稀疏的词汇表。该词汇表的规模会直接影响代码分析任务的效率，因此现有方法大多都对Token进行规范化，比如将变量名用统一的标识符来代替，从而降低词汇表的规模。但是后续神经网络模型训练过程中，当出现某个词汇在词汇表中没有出现过，那么神经网络模型就无法对齐建模，即出现了在词汇表中不存在的Token，\textbf{集外词}（Out-of-vocabulary，简称OOV）问题。有研究\cite{RJXB202205011}发现，针对代码表征中的集外词问题，在经典BigcloneBench\cite{7332459}数据集中OOV比率高达62.68\%，在OJClone数据集\cite{WOS:000485474201046}中OOV比率达到了16.82\%。
 
 为了解决OOV问题，本文打算使用预训练模型增加词汇表的大小。近期，研究人员在大规模语料库上预训练各种语言模型，在解决各种自然语言处理任务方面取得了良好进展\cite{zhao2023survey}。在表征学习领域，也有基于大规模预训练模型提升代码表征能力的方法被提出。InferCode\cite{9402028}将自然语言处理中的自监督学习思想引入到代码的抽象语法树的表示中, 通过预测从AST上下文中自动识别的子树来训练代码表征，并且使用AST的子树作为训练标签，从而无需任何人工标记工作。该预训练InferCode模型可以应用于下游的无监督学习，例如代码聚类、代码克隆检测、跨语言代码搜索等。GraphCodeBERT\cite{guo2021graphcodebert}方法提出了一个基于数据流的代码表征预训练模型，与抽象语法树不同，数据流包含代码变量间“值从哪里来”的语义特征，并不会带来深层次不必要的复杂信息，使用该特征可以更有效的生成代码表征。然而这些预训练模型通常存在参数规模庞大, 训练及使用代价大的问题。
 
@@ -32,7 +32,7 @@
 在上述框架中，本文的创新点主要体现在预训练辅助词嵌入阶段的相邻单元迭代算法、Token代码表征阶段的模型设计两方面，下面将围绕这两个创新点来阐述本文的方法。
 
 \subsection{预训练辅助词嵌入设计}
-\label{subsec:Model}
+\label{subsec:TokenPreModel}
 
 与自然语言处理类似，源代码的词法单元Token可以视为句子中的单词，Token维度的代码表征方法第一步就是将词法单元Token转换为机器易于理解和操作的数值向量，即词嵌入技术。它将词汇表中的每个单词转换成一个低维度、连续的向量表示，这种向量通常被称为词向量。目前，使用预训练词嵌入模型训练词向量的研究工作发展迅速，Word2vec、GloVe、FastText、ELMo和BERT等模型也相继被提出。其中，Word2vec模型通过从大规模无标注文本数据集中学习上下文信息，自动捕捉并编码词汇的语义关系，生成的词嵌入向量作为下游任务的输入特征，可以显著提升神经网络模型的性能和泛化能力。因此，本文采用Word2vec模型进行词嵌入。
 
@@ -61,7 +61,7 @@
           \State add adjacent token to AgramsSet
         \EndFor 
       \Else
-        \State numbers[] = {} 
+        \State numbers[] = \{\} 
         \For{Agram in Aragms}
           \State Calculate the number of Argram in Corpus 
           \State add number to numbers \Comment{step2:计算单元Agram出现的次数} 
@@ -83,7 +83,7 @@
 （3）更新：遍历AragmsSet中所有的Agram的value值，将频率最高的Agram合并到新语料库中。然后重复（2）、（3）步骤，直到迭代次数N减少为0。
 
 \subsection{Token代码表征设计}
-\label{subsec:Token}
+\label{subsec:TokenModel}
 （1）结构设计
 
 为了提高Token维度代码表征能力，本文选用AttBiLSTM神经网络对上述得到词向量进行建模，具体的模型设计如图\ref{fig:tokenmodel}所示。该模型主要包括输入层、双向长短时记忆层(BiLSTM)和自注意力机制层(Attention)、输出层。
@@ -162,7 +162,7 @@
 \end{equation}
 
 \section{Token表征方法具体实现}
-\label{sec:achieve}
+\label{sec:Tokenachieve}
 在介绍具体实现之前，本节首先给出Token表征方法的输入：经过\ref{subsec:Preprocess}小节的代码预处理阶段，得到示例代码片段\ref{fig:code}对应的Token序列，如图\ref{fig:tokencode}所示。
 \begin{figure}[H] 
   \centering  %居中
@@ -213,10 +213,10 @@
 \end{equation}
 
 经过嵌入阶段的预训练后，每一个Token $w_{i}^{a}$ 都被转换为一个密集向量$x_{i}^{a}$,经过BiLSTM编码后，生成了$h_{i}^{aBiLSTM}$，然后经过Attention层的总结后，生成了$V_{a}^{Token}$作为代码片段$C_{a}$的最终Token表示，即属性特征向量。
-同样，可以使用相同的计算得以$\left( x_{1}^{b},x_{2}^{b},\ldots,x_{n}^{b} \right)$作为输入为代码片段$C_{b}$计算$V_{b}^{Token}$。
+同样，可以使用相同的计算以$\left( x_{1}^{b},x_{2}^{b},\ldots,x_{n}^{b} \right)$作为输入为代码片段$C_{b}$计算$V_{b}^{Token}$。
 
 \section{实验验证}
-\label{sec:Experiment}
+\label{sec:TokenExperiment}
 为了验证基于预训练辅助模型的Token表征方法的有效性，本节展开实验验证。首先，介绍了实验整体的环境配置、数据集，以及实验评估指标；接着，对基于预训练模型的Token表征方法进行了消融实验。
 
 \subsection{实验环境}
@@ -327,7 +327,7 @@
 \end{equation}
 
 \subsection{实验结果}
-
+\label{subsec:TokenResult}
 （1） 预训练语料库规模的实验结果
 
 为了探究预训练语料库规模对Token表征实验结果的影响，本文选取POJ104数据集中部分数据进行预训练，基于相邻单元迭代算法构造预训练语料库。具体地，在\ref{subsec:Dataset}数据库中随机选取了100对、200对、500对代码克隆对作为预训练数据集，构造预训练语料库，对Token表征模型进行预训练。具体实验结果如表\ref{tab:category}所示。
