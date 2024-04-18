@@ -5,9 +5,13 @@
 \section{研究动机}
 \label{sec:TokenMotivation}
 
-基于Token的代码表征方法本质上就是将源代码转换为一系列词法单元Token组成的序列，并对Token序列进行代码分析。类似于自然语言技术处理文本，由于源代码中存在大量用户自己定义的标识符，不同用户的命名习惯不同，在对源代码的词法单元建模时，会产生一个规模巨大且稀疏的词汇表。该词汇表的规模会直接影响代码分析任务的效率，因此现有方法大多都对Token进行规范化，比如将变量名用统一的标识符来代替，从而降低词汇表的规模。但是后续神经网络模型训练过程中，当出现某个词汇在词汇表中没有出现过，那么神经网络模型就无法对齐建模，即出现了在词汇表中不存在的Token，\textbf{集外词}（Out-of-vocabulary，简称OOV）问题。有研究\cite{RJXB202205011}发现，针对代码表征中的集外词问题，在经典BigcloneBench\cite{7332459}数据集中OOV比率高达62.68\%，在OJClone数据集\cite{WOS:000485474201046}中OOV比率达到了16.82\%。
+基于Token的代码表征方法本质上就是将源代码转换为一系列词法单元Token组成的序列，并对Token序列进行代码分析。
 
-为了解决OOV问题，本文打算使用预训练模型增加词汇表的大小。近期，研究人员在大规模语料库上预训练各种语言模型，在解决各种自然语言处理任务方面取得了良好进展\cite{zhao2023survey}。在表征学习领域，也有基于大规模预训练模型提升代码表征能力的方法被提出。InferCode\cite{9402028}将自然语言处理中的自监督学习思想引入到代码的抽象语法树的表示中, 通过预测从AST上下文中自动识别的子树来训练代码表征，并且使用AST的子树作为训练标签，从而无需任何人工标记工作。该预训练InferCode模型可以应用于下游的无监督学习，例如代码聚类、代码克隆检测、跨语言代码搜索等。GraphCodeBERT\cite{guo2021graphcodebert}方法提出了一个基于数据流的代码表征预训练模型，与抽象语法树不同，数据流包含代码变量间“值从哪里来”的语义特征，并不会带来深层次不必要的复杂信息，使用该特征可以更有效的生成代码表征。然而这些预训练模型通常存在参数规模庞大, 训练及使用代价大的问题。
+基于Token的代码表征方法存在两种主要限制：
+
+（1）集外词问题：类似于自然语言技术处理文本，由于源代码中存在大量用户自己定义的标识符，不同用户的命名习惯不同，在对源代码的词法单元建模时，会产生一个规模巨大且稀疏的词汇表。该词汇表的规模会直接影响代码分析任务的效率，因此现有方法大多都对Token进行规范化，比如将变量名用统一的标识符来代替，从而降低词汇表的规模。但是后续神经网络模型训练过程中，当出现某个词汇在词汇表中没有出现过，那么神经网络模型就无法对齐建模，即出现了在词汇表中不存在的Token，集外词（Out-of-vocabulary，简称OOV）问题。有研究\cite{RJXB202205011}发现，针对代码表征中的集外词问题，在经典BigcloneBench\cite{7332459}数据集中OOV比率高达62.68\%，在OJClone数据集\cite{WOS:000485474201046}中OOV比率达到了16.82\%。
+
+（2）预训练辅助模型训练代价大：为了解决OOV问题，本文打算使用预训练模型增加词汇表的大小。近期，研究人员在大规模语料库上预训练各种语言模型，在解决各种自然语言处理任务方面取得了良好进展\cite{zhao2023survey}。在表征学习领域，也有基于大规模预训练模型提升代码表征能力的方法被提出。InferCode\cite{9402028}将自然语言处理中的自监督学习思想引入到代码的抽象语法树的表示中, 通过预测从AST上下文中自动识别的子树来训练代码表征，并且使用AST的子树作为训练标签，从而无需任何人工标记工作。该预训练InferCode模型可以应用于下游的无监督学习，例如代码聚类、代码克隆检测、跨语言代码搜索等。GraphCodeBERT\cite{guo2021graphcodebert}方法提出了一个基于数据流的代码表征预训练模型，与抽象语法树不同，数据流包含代码变量间“值从哪里来”的语义特征，并不会带来深层次不必要的复杂信息，使用该特征可以更有效的生成代码表征。然而这些预训练模型通常存在参数规模庞大, 训练及使用代价大的问题。
 
 因此，针对集外词OOV问题，本文提出了一种轻量级的基于预训练辅助模型的Token表征学习方法，该方法在提升代码表征能力的同时，并不会引入过多参数，造成模型训练代价高的问题。
 
@@ -45,34 +49,34 @@
 \begin{algorithm}[ht]  
 	\renewcommand{\algorithmicrequire}{\textbf{Input:}}
 	\renewcommand{\algorithmicensure}{\textbf{Output:}}
-	\caption{Iterative algorithm main function}  
+	\caption{Iterative algorithm}  
 	\label{alg1}
 	\begin{algorithmic}[1]
-    \Require Tokens Corpus $Corpus$
-    \Require The number of iterations $N$
-		\Ensure New Corpus $NewCorpus$
-    \Ensure Vocabulary $Vocab$
+    \Require Origin Tokens Corpus:$Corpus$
+    \Require The number of iterations:$N$
+		\Ensure New Corpus: $New\_Corpus$
+    \Ensure Vocabulary:$Vocab$
     \State $AgramsSet = \varnothing $ 
-    \State $NewCorpus \leftarrow Corpus $ 
+    \State $New\_Corpus \leftarrow Corpus $ 
     \State $Vocab = \left\{\right\} $  \Comment{step1:初始化}
 		\For{$i \leftarrow 1$ to $N$}
       \If {i == 1}
-        \For{token in Corpus}
+        \For{token $in$ Corpus}
           \State add adjacent token to AgramsSet
         \EndFor 
       \Else
         \State numbers[] = \{\} 
-        \For{Agram in Aragms}
+        \For{Agram $in$ Aragms}
           \State Calculate the number of Argram in Corpus 
           \State add number to numbers \Comment{step2:计算单元Agram出现的次数} 
         \EndFor 
         \State $n \leftarrow $ Max(numbers) 
-        \State $MaxAgram \leftarrow$ Agram in Agrams whose number is n
-        \State add $MaxAgram:n$ to Vocab \Comment{step3:更新词汇表}
-        \State add Agram to NewCorpus \Comment{step3:更新语料库}
+        \State $Max\_Agram \leftarrow$ Agram in Agrams whose number is n
+        \State add $\left(Max\_Agram:n\right)$ to Vocab \Comment{step3:更新词汇表}
+        \State add Agram to New\_Corpus \Comment{step3:更新语料库}
       \EndIf
     \EndFor \\
-    \Return $NewCorpus$，$Vocab$ 
+    \Return $New\_Corpus,Vocab$ 
 	\end{algorithmic}
 \end{algorithm}
 
@@ -116,7 +120,7 @@
   \begin{split}
     i_t &= \sigma \left(W_{i} \cdot \left[h_{t-1},x_{t}\right] + b_i\right)
     \\
-    \widetilde{C_t} &= tanh \left(W_{c} \cdot \left[h_{t-1},x_{t}\right] + b_c \right)
+    \widetilde{C_t} &= \tanh \left(W_{c} \cdot \left[h_{t-1},x_{t}\right] + b_c \right)
   \end{split}
 \end{equation}
 
@@ -132,7 +136,7 @@
   \begin{split}
    out_t &= \sigma \left(W_{out} \cdot \left[h_{t-1},x_{t}\right] + b_o \right)
    \\
-   h_t &= out_t \otimes tanh \left(C_t\right)
+   h_t &= out_t \otimes \tanh \left(C_t\right)
   \end{split}
 \end{equation}
 
@@ -189,7 +193,7 @@
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.8\textwidth]{figures/token}
+  \includegraphics[width=0.9\textwidth]{figures/token}
   \caption{基于预训练辅助模型的Token表征学习方法实现}\label{fig:token}
 \end{figure}
 
@@ -337,8 +341,10 @@
   \caption{预训练语料库规模对实验结果的影响}   
   \label{tab:category}  
   \begin{tabular*}{0.9\textwidth}{@{\extracolsep{\fill}}ccccc}  
-  \toprule  
-  预训练数据集规模 &词表长度 & 准确率(\%) & 召回率(\%) & F1值(\%)  \\  
+  \toprule
+  \multirow{2}{*}{预训练数据集规模} & \multirow{2}{*}{词表长度} & \multicolumn{3}{c}{OJClone} \\
+  \cmidrule{3-5} 
+   & & 准确率(\%) & 召回率(\%) & F1值(\%)  \\  
   \midrule 
   100对	&231		& xxx	& xxx	& xxx		 \\  
   300对	&444		& xxx	& xxx	& xxx		\\  
@@ -350,31 +356,14 @@
 
 （2） Token表征模型实验结果
 
-为了探究Token表征模型AttBiLSTM对实验结果的影响，本文基于预训练辅助的基础上，将AttBiLSTM模型与LSTM与BiLSTM模型进行对比，结果如表\ref{tab:category2}所示。其中LSTM模型基于Pytorch1.10实现
-
-AttBiLSTM模型基于pytorch实现，其参数设置为下表：
+为了探究Token表征模型AttBiLSTM对实验结果的影响，本文基于预训练辅助的基础上，将AttBiLSTM模型与LSTM与BiLSTM模型进行对比，结果如表\ref{tab:category2}所示。其中LSTM、BiLSTM模型基于Pytorch1.10实现，其参数设置为：
 
 词嵌入层：将大小为600的词汇表映射到128维的向量空间。
 双向LSTM层：双向的LSTM单元堆叠而成，输入特征的维度与嵌入层匹配为104层，隐藏层维度设置104，由于设置为双向，因此输出维度为104*2=208层。
 全连接层：208层的输入映射到1维的输出中
 sigmoid层：激活函数，将全连接层的输出转换到0到1之间的概率值。
 
-
-
-
-
-
-
-模型的优化器为Adam优化器，学习率设置为0.0001，dropout 为0.1，epochs
-为150，参数的确定是通过多次调试后选择最优参数作为最后的结果。
-
-
-
-
-Tensorflow[62] 和Keras[63] 实现，其中Tensorflow
-作为后端，前端通过调用Keras 的API 接口来搭建Sequential 顺序模型。整个多任务
-模型的实现包括输入层、共享层、任务分支解码器和输出层，具体模型层次设置如
-表3.1所示。
+模型的优化器为Adam优化器，学习率设置为0.0001，dropout 为0.1，epochs为50，参数的确定是通过多次调试后选择最优参数作为最后的结果。
 
 \begin{table}[H]  
   \centering  
@@ -391,7 +380,6 @@ Tensorflow[62] 和Keras[63] 实现，其中Tensorflow
   \end{tabular*}  
 \end{table}
 从表\ref{tab:category}可以看出, 随着预训练语料库的增大, 克隆检测任务的F1值呈现上升趋势, 即对代码克隆的检测效果会不断增强. 考虑到需要预留出足够的答案样本用来构造训练集和测试集, 最终选择AttBiLSTM模型作为Token表征模型。
-
 
 \section{本章小结}
 \label{sec:Summary3}
