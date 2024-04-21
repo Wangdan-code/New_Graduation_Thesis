@@ -137,8 +137,8 @@
   \caption{子树表征：树卷积设计}\label{fig:TreeBaseConvolution}
 \end{figure}
 
-在基于树的卷积神经网络中，每个节点都与其邻居节点相连，形成一个局部邻域。卷积核在这个局部邻域上进行滑动，计算节点与其邻居的加权和，从而提取出特征。用数学公式表示，卷积核的滑动尺寸是$d$，它表示每个滑动窗口能够包括的树的层数。在这个窗口内包含$n$个节点$\left(x_1,x_2,\ldots,x_n\right)$，其中，$x_i \in \mathbb{R}^{N_{f}}$，$N_{f}$表示每个节点建模后的向量大小。使用公式\ref{e4.9}可以对滑动窗口内$n$个节点进行卷积得到基于树的卷积神经网络输出。
-\begin{equation}\label{e4.9}
+在基于树的卷积神经网络中，每个节点都与其邻居节点相连，形成一个局部邻域。卷积核在这个局部邻域上进行滑动，计算节点与其邻居的加权和，从而提取出特征。用数学公式表示，卷积核的滑动尺寸是$d$，它表示每个滑动窗口能够包括的树的层数。在这个窗口内包含$n$个节点$\left(x_1,x_2,\ldots,x_n\right)$，其中，$x_i \in \mathbb{R}^{N_{f}}$，$N_{f}$表示每个节点建模后的向量大小。使用公式\ref{e4.1}可以对滑动窗口内$n$个节点进行卷积得到基于树的卷积神经网络输出。
+\begin{equation}\label{e4.1}
   \begin{split}
     y = \tanh \left(\sum_{i=1}^{n} W_{\text{conv}, i} \cdot x_{i}+b_{\text{conv}}\right)
   \end{split}
@@ -154,8 +154,8 @@
   \caption{连续二叉树}\label{fig:Continuous}
 \end{figure}
 
-具体地，针对滑动窗口中的节点，需要设置三个变量：$W_{\text{conv}}^{t},W_{\text{conv}}^{l},W_{\text{conv}}^{r}$分别代表当前节点距离树形上、左、右三个方向，其卷积矩阵$W_{conv,i}$是这三个变量的线性组合，其系数根据节点在当前滑动窗口中的相对位置计算，具体公式为\ref{e4.1}：
-\begin{equation}\label{e4.1}
+具体地，针对滑动窗口中的节点，需要设置三个变量：$W_{\text{conv}}^{t},W_{\text{conv}}^{l},W_{\text{conv}}^{r}$分别代表当前节点距离树形上、左、右三个方向，其卷积矩阵$W_{conv,i}$是这三个变量的线性组合，其系数根据节点在当前滑动窗口中的相对位置计算，具体公式为\ref{e4.2}：
+\begin{equation}\label{e4.2}
   \begin{split}
     W_{\text{conv}, i}=\frac{d_{i}^{b}}{d_{i}^{b}+d_{i}^{t}} W_{\text{conv}}^{t}+\frac{d_{i}^{t}}{d_{i}^{b}+d_{i}^{t}} W_{\text{conv}, i}^{b}
   \end{split}
@@ -163,7 +163,7 @@
 
 其中，$d_{i}^{t}$表示当前节点距离树形顶点的距离，$d_{i}^{b}$表示当前节点距离树形左右顶点构成的边的距离，两者相加为$d$，即$d_{i}^{t} + d_{i}^{b} = d$。上式中$W_{\text{conv}, i}^{b}$有如下定义：
 
-\begin{equation}\label{e4.2}
+\begin{equation}\label{e4.3}
   \begin{split}
     \begin{array}{l}
       W_{\text{conv}, i}^{b}= 
@@ -187,8 +187,8 @@
   \caption{GRU模型时序结构图}\label{fig:GRU}
 \end{figure}
 
-具体来说，首先会根据当前时间步的输入$x_{t}$和上一时间步的隐藏状态$h_{t-1}$计算出重置门和更新门的值，具体的计算公式见\ref{e4.5}。
-\begin{equation}\label{e4.5}
+具体来说，首先会根据当前时间步的输入$x_{t}$和上一时间步的隐藏状态$h_{t-1}$计算出重置门和更新门的值，具体的计算公式见\ref{e4.4}。
+\begin{equation}\label{e4.4}
   \begin{split}
     z_{t} = \sigma \left(W_{u} \cdot \left[h_{t-1},x_{t}\right] + b_z \right)
     \\
@@ -196,16 +196,16 @@
   \end{split}
 \end{equation}
 
-然后，输入重置门，对上一个时间步的隐藏状态进行处理，得到一个新的候选隐藏状态$\widetilde{h_t}$。其中，重置门用来控制上一个时间步的信息有多少应该被遗忘。具体地，通过公式\ref{e4.6}计算一个介于-1到1之间的值，决定上一个时间步的隐藏状态有多少信息应该被保留或遗忘，得出的值越接近0越有可能被丢弃，越接近1越有可能被记住。
-\begin{equation}\label{e4.6}
+然后，输入重置门，对上一个时间步的隐藏状态进行处理，得到一个新的候选隐藏状态$\widetilde{h_t}$。其中，重置门用来控制上一个时间步的信息有多少应该被遗忘。具体地，通过公式\ref{e4.5}计算一个介于-1到1之间的值，决定上一个时间步的隐藏状态有多少信息应该被保留或遗忘，得出的值越接近0越有可能被丢弃，越接近1越有可能被记住。
+\begin{equation}\label{e4.5}
   \begin{split}
     \widetilde{h_t} &= \tanh \left(W_x \cdot x_t \otimes U_h \cdot\left(r_t \cdot h_{t-1}\right) + b_h  \right)
   \end{split}
 \end{equation}
 
-接着，输入更新门，将新的候选隐藏状态$\widetilde{h_t}$和上一个时间步的隐藏状态$h_{t-1}$进行加权组合，得到当前时刻的隐藏状态$h_t$。其中，更新门用来控制新输入的信息和上一个时间步的信息应该如何结合。具体地，通过公式\ref{e4.7} 决定当前时刻的隐藏状态应该有多少信息来自上一时刻的隐藏状态，以及有多少信息来自当前时刻的输入和重置门处理后的结果。通过更新门，GRU能够平衡新旧信息的影响，从而有效地捕捉序列数据中的长期依赖关系。最后，当前时刻的隐藏状态会被输出。
+接着，输入更新门，将新的候选隐藏状态$\widetilde{h_t}$和上一个时间步的隐藏状态$h_{t-1}$进行加权组合，得到当前时刻的隐藏状态$h_t$，如公式\ref{e4.6}所示。其中，更新门用来控制新输入的信息和上一个时间步的信息应该如何结合。具体地，通过公式\ref{e4.7} 决定当前时刻的隐藏状态应该有多少信息来自上一时刻的隐藏状态，以及有多少信息来自当前时刻的输入和重置门处理后的结果。通过更新门，GRU能够平衡新旧信息的影响，从而有效地捕捉序列数据中的长期依赖关系。最后，当前时刻的隐藏状态会被输出。
 
-\begin{equation}\label{e4.7}
+\begin{equation}\label{e4.6}
   \begin{split}
    h_t &= \left(1- z_t\right) \otimes h_{t-1} +  z_t \otimes \widetilde{h_t}
   \end{split}
@@ -219,8 +219,8 @@
   \caption{树表征：BiGRU模型设计}\label{fig:BiGRU}
 \end{figure}
 
-和\ref{subsec:TokenModel}提出的双向长短时记忆模型相比，GRU结构简单，参数简单，因此通常可以更快收敛到最优解，从而节省计算资源和时间。整个模型，除了子单元有所改变外，架构不变。这里不展开介绍，仅给出公式\ref{e4.8}。
-\begin{equation}\label{e4.8}
+和\ref{subsec:TokenModel}提出的双向长短时记忆模型相比，GRU结构简单，参数简单，因此通常可以更快收敛到最优解，从而节省计算资源和时间。整个模型，除了子单元有所改变外，架构不变。这里不展开介绍，仅给出公式\ref{e4.7}。
+\begin{equation}\label{e4.7}
   \begin{split}
     \overrightarrow{y_t} &= W_0 \cdot GRU\left(x_{t},\overrightarrow{h_{t-1}}\right) + b_0
     \\
@@ -263,19 +263,19 @@
   \caption{基于子树划分的抽象语法树表征学习方法实现}\label{fig:ast}
 \end{figure}
 
-具体来说，在子树划分阶段，对于代码片段$C_{a}$，经过代码分析工具Joern生成得到抽象语法树$AST_{a}$,通过子树划分算法，可以得到子树序列，用$\left(SubTree_{1}^{a},SubTree_{2}^{a},\ldots,\notag \right.\\\left.SubTree_{1}^{m}\right)$表示,$m$是子树序列的长度。其子树划分过程可以表示为公式\ref{e4.3}：
+具体来说，在子树划分阶段，对于代码片段$C_{a}$，经过代码分析工具Joern生成得到抽象语法树$AST_{a}$,通过子树划分算法，可以得到子树序列，用$\left(SubTree_{1}^{a},SubTree_{2}^{a},\ldots,\notag \right.\\\left.SubTree_{1}^{m}\right)$表示,$m$是子树序列的长度。其子树划分过程可以表示为公式\ref{e4.8}：
 
-\begin{equation}\label{e4.3}
+\begin{equation}\label{e4.8}
   \begin{split}
-    \left(SubTree_{1}^{a},SubTree_{2}^{a},\ldots,SubTree_{m}^{a}\right) = split \left(AST_{a}\right)
+    \left(SubTree_{1}^{a},SubTree_{2}^{a},\ldots,SubTree_{m}^{a}\right) = split\_AST \left(AST_{a}\right)
   \end{split}
 \end{equation}
 
 经过子树划分后，代码片段$C_{a}$生成了子树序列$\left(SubTree_{1}^{a},SubTree_{2}^{a},\ldots,SubTree_{m}^{a}\right)$。使用同样的划分方法，可以得到代码片段$C_{b}$生成了子树序列$\left(SubTree_{1}^{b},SubTree_{2}^{b},\ldots,\notag \right.\\\left.SubTree_{n}^{b}\right)$，$n$是代码片段$C_b$对应的子树序列长度。
 
-在树表征阶段，首先将代码片段的子树序列作为输入，使用基于树的卷积神经网络模型进行编码，得到每个子树对应的语句向量$\left( e_{1}^{a},e_{2}^{a},\ldots,e_{m}^{a}\right)$。然后，使用双向门控循环单元(BiGRU)来模拟语句的自然性，通过最大池化层将BiGRU的隐藏状态采样到单个固定长度的向量$V_{a}^{AST}$中，作为最终的抽象语法树表示，即结构特征向量。具体的处理过程如公式\ref{e4.4}
-\begin{equation}\label{e4.4}
-  \begin{split}e
+在树表征阶段，首先将代码片段的子树序列作为输入，使用基于树的卷积神经网络模型进行编码，得到每个子树对应的语句向量$\left( e_{1}^{a},e_{2}^{a},\ldots,e_{m}^{a}\right)$。然后，使用双向门控循环单元(BiGRU)来模拟语句的自然性，通过最大池化层将BiGRU的隐藏状态采样到单个固定长度的向量$V_{a}^{AST}$中，作为最终的抽象语法树表示，即结构特征向量。具体的处理过程如公式\ref{e4.9}
+\begin{equation}\label{e4.9}
+  \begin{split}
     h_{1}^{aBiGRU},h_{2}^{aBiGRU},\ldots,h_{n}^{aBiGRU} = BiGRU \left(e_{1}^{a},e_{2}^{a},\ldots,e_{m}^{a}\right) \\
     V_{a}^{AST} = MaxPool \left( h_{1}^{aBiGRU},h_{2}^{aBiGRU},\ldots,h_{n}^{aBiGRU} \right)
   \end{split}
