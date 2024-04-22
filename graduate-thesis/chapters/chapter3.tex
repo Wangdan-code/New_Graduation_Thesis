@@ -344,9 +344,9 @@
   \cmidrule{3-5} 
    & & 准确率(\%) & 召回率(\%) & F1值(\%)  \\  
   \midrule 
-  100对	&231		& xxx	& xxx	& xxx		 \\  
-  300对	&444		& xxx	& xxx	& xxx		\\  
-  500对	&600 	& 89.74	& 87.84	& 88.78	\\  
+  100对	&240		& 89.74	& 87.84	& 88.78		 \\  
+  300对	&463		& 89.76	& 90.24	& 90.00	 \\  
+  500对	&593 	  & 89.78	& 100	& 94.62	   \\  
   \bottomrule  
   \end{tabular*}  
 \end{table}
@@ -354,14 +354,7 @@
 
 （2） Token表征模型实验结果
 
-为了探究Token表征模型AttBiLSTM对实验结果的影响，本文基于预训练辅助的基础上，将AttBiLSTM模型与LSTM与BiLSTM模型进行对比，结果如表\ref{tab:category2}所示。其中LSTM、BiLSTM模型基于Pytorch1.10实现，其参数设置为：
-
-词嵌入层：将大小为600的词汇表映射到128维的向量空间。
-双向LSTM层：双向的LSTM单元堆叠而成，输入特征的维度与嵌入层匹配为104层，隐藏层维度设置104，由于设置为双向，因此输出维度为104*2=208层。
-全连接层：208层的输入映射到1维的输出中
-sigmoid层：激活函数，将全连接层的输出转换到0到1之间的概率值。
-
-模型的优化器为Adam优化器，学习率设置为0.0001，dropout 为0.1，epochs为50，参数的确定是通过多次调试后选择最优参数作为最后的结果。
+为了探究Token表征模型AttBiLSTM对实验结果的影响，本文基于预训练辅助的基础上，将AttBiLSTM模型与LSTM与BiLSTM模型进行对比，结果如表\ref{tab:category2}所示。其中LSTM、BiLSTM模型基于Pytorch1.10实现，其参数设置为：\ding{172}词嵌入层：将大小为600的词汇表映射到128维的向量空间。\ding{173}双向LSTM层：双向的LSTM单元堆叠而成，输入特征的维度与嵌入层匹配为104层，隐藏层维度设置104，由于设置为双向，因此输出维度为104*2=208层。\ding{174}全连接层：208层的输入映射到1维的输出中。\ding{175}sigmoid层：激活函数，将全连接层的输出转换到0到1之间的概率值。模型的优化器为Adam优化器，学习率设置为0.0001，Dropout为0.1，Epochs为50，参数的确定是通过多次调试后选择最优参数作为最后的结果。
 
 \begin{table}[H]  
   \centering  
@@ -370,10 +363,10 @@ sigmoid层：激活函数，将全连接层的输出转换到0到1之间的概�
   \begin{tabular*}{0.9\textwidth}{@{\extracolsep{\fill}}cccc}  
   \toprule  
   表征模型 & 准确率(\%) & 召回率(\%) & F1值(\%)  \\  
-  \midrule  
+  \midrule
+  RNN      & xxx	& xxx	& xxx		 \\
   LSTM			& xxx	& xxx	& xxx		 \\  
-  BiLSTM			& xxx	& xxx	& xxx		 \\  
-  AttBiLSTM			& 89.74	& 87.84	& 88.78		\\  
+  AttBiLSTM		&	89.78	& 100	& 94.62		\\  
   \bottomrule  
   \end{tabular*}  
 \end{table}
