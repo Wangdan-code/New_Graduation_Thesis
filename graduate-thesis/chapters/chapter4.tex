@@ -291,28 +291,72 @@
 \subsection{实验设计}
 \label{subsec:ASTDesign}
 
-本节使用与\ref{sec:TokenExperiment}节中同样的实验环境和数据集对基于子树划分的抽象语法树表征学习方法进行对比实验。使用代码分析工具Joern获取数据集中代码片段的抽象语法树，然后使用基于树的卷积神经网络训练子树嵌入，并将嵌入向量大小设置为128。模型的batch\_size为32，优化器为Adam优化器，学习率为0.002，克隆检测的阈值设置为0.5。同样选取常用的精确率（Precision）、召回率（Recall）、F1值作为评估指标。
+本节使用与\ref{sec:TokenExperiment}节中同样的实验环境、数据集对基于子树划分的抽象语法树表征学习方法进行对比实验。本实验使用代码分析工具Joern获取数据集中代码片段的抽象语法树AST，然后使用基于树的卷积神经网络训练子树嵌入，并将嵌入向量大小设置为128。同样选取常用的精确率（Precision）、召回率（Recall）、F1值作为评估指标。
 
 \subsection{实验结果}
 \label{subsec:TokenResult}
-消融对比实验：体现AST子树划分的有效性
 
-基于AST的Tree-LSTM
+（1）拆分AST粒度的实验结果
 
-基于AST的+子树划分的Tree-LSTM
+为了探究子树拆分对抽象语法树表征实验结果的影响，本文设计了三种不同的方法来处理AST。首先，将代码片段原始的完整抽象语法树视为一个特殊的子树，不进行拆分，用AST-Full表示，即粒度威威整棵树，完全不进行子树划分。其次，将AST的所有节点均提取为子树，用AST-Node表示，即粒度精确到每个节点。最后，根据子树划分块来处理抽象语法树，用AST-Block表示。本实验采取单一变量原则，仅修改AST拆分粒度，后续子树的编码采用相同的基于树的卷积神经网络，采用双向GRU处理整棵树的嵌入。具体实验结果如表\ref{tab:subtree}所示。
 
-\begin{table}
+
+\begin{table}[htp] 
   \centering
-  \caption{抽象语法树子树划分实验结果} %{tab:category}
+  \caption{抽象语法树子树划分对实验结果的影响} 
+  \label{tab:subtree}
+  %\renewcommand{\arraystretch}{1.1}
   \begin{tabular*}{0.9\textwidth}{@{\extracolsep{\fill}}cccc}
   \toprule
-    对比			&P		&R		&F1 \\
+  \multirow{2}{*}{AST划分粒度} & \multicolumn{3}{c}{POJ104} \\
+  \cmidrule{2-4} 
+   & 准确率P(\%) & 召回率R(\%) & F1值(\%)  \\  
   \midrule
-    基于AST的Tree-LSTM			&89.78	&87.88		&88.82 \\
-    基于AST的+子树划分的Tree-LSTM			&92.7	&87.6		&90.0 \\
+    AST-Full			&85.74	  &87.72		  &86.70 \\
+    AST-Node      &89.78	  &87.88		   &88.82 \\
+    AST-Block			&92.75	  &87.62		   &90.11 \\
   \bottomrule
   \end{tabular*}
 \end{table}
+
+从表\ref{tab:subtree}可以看出，AST-Block优于AST-Full和AST-Node。探究其原因，AST-Full未进行子树划分，因此抽象语法树通常规模过大，在模型训练过程中容易造成梯度消失，权重无法及时更新，同时无法提取子树粒度的代码信息，从而导致代码检测的效果最差。而AST-Node将树的每一个节点都设为子树，导致基于树卷积的神经网络输入规模过大，影响检测效率。AST-Block很好地平衡了子树大小和句法信息的丰富性，其F1值达到了90.11。因此，得出以下结论：本章提出的子树划分算法对代码克隆的检测具有一定的优势。
+
+（2）树表征模型实验结果
+
+为了探究树表征模型GRU对实验结果的影响，本文在子树划分的基础上，将GRU模型与LSTM模型进行对比，结果如表\ref{tab:tree2}所示。
+
+其中，GRU、LSTM均基于Pytorch1.10实现，其参数设置为：\ding{172} 子树划分：采用AST-Block的划分方法。\ding{173} 子树的表征均采用基于树的卷积神经网络，整树的表征模型的隐藏层维度设置为128，模型使用二元交叉熵作为损失函数，使用Adam优化器来训练模型参数，其中，学习率Learning\_rate设置为0.001，Dropout为0.5，训练批次Epochs为50，批处理大小Batch\_size为32，阈值Threshold为0.5，当相似度超过0.5，输入的代码对被判定为真克隆对，否则被判定为假克隆对。参数的确定是通过多次调试后选择最优参数作为最后的结果。
+
+\begin{table}[htp]  
+  \centering  
+  \caption{树表征模型对实验结果的影响}   
+  \label{tab:tree2}
+  %\renewcommand{\arraystretch}{1.1}  
+  \begin{tabular*}{0.9\textwidth}{@{\extracolsep{\fill}}cccc}  
+  \toprule  
+  表征模型 & 准确率P(\%) & 召回率R(\%) & F1值(\%)  \\  
+  \midrule
+  LSTM			  & 92.21	  & 83.52	 & 87.65		\\  
+  GRU		      & 92.75	  & 87.62	 & 90.11 \\ 
+  \bottomrule  
+  \end{tabular*}  
+\end{table}
+
+基于对表\ref{tab:tree2}数据的分析，可以得到以下结论：（1）在对整树进行表征的过程中，LSTM模型的整体表现略差于GRU，准确率整体相当，两者均可以解决传统循环神经网络中存在的梯度消失问题。（2）LSTM模型的召回率比GRU低4.10\%。深究其原因，可能是因为LSTM由于单元内包含三个门，计算机制复杂，所以影响其召回率，而GRU模型结构相对简单，只有两个门，参数数量较少，模型收敛速度更快，计算效率更高。因此，在树维度的代码表征模型选取上，本文更倾向于GRU。
+
+
+（3）树表征可视化
+
+为了更直观地展示本文提出的子树划分算法的有效性，本实验同样使用t-SNE技术将高维Token维度属性特征向量可视化。按照预先设定的参数，树表征学习后生成的张量维度是128，采用t-SNE技术将128维的张量转换为2维，得到的样本表征结果如图\ref{fig:astresult}所示。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{figures/token}
+  \caption{经过子树划分学习到的AST表征对比}\label{fig:astresult}
+\end{figure}
+
+分析上图，观察可视化结果，寻找可能的代码克隆群集。相似的代码片段在降维后的空间中应该更接近彼此。黑色代表label标签为1的样本，红色表示label标签为2的样本。经过树表征模型的训练，得到右图。
+
 
 \section{本章小结}
 \label{sec:Summary4}
