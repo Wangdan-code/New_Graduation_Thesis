@@ -225,8 +225,7 @@
 
 \subsection{实验环境}
 \label{subsec:Environment}
-本章的实验验证均运行于Linux系统下，其系统硬件配置如表\ref{tab:environment}所示。其中Pytorch是由Facebook 
-团队为深度学习网络开发的编程框架，在机器学习和深度学习上已经成为深受研究者们喜爱的工具之一。
+本章的实验验证均运行于Linux系统下，实验对于软硬件环境有一定的要求，在硬件方面需要一定的显卡来提升模型训练速度，软件方面需要代码分析工具Joern生成对应的抽象语法树、程序依赖图，并依赖深度学习库来实现模型，具体的系统配置如表\ref{tab:environment}所示。
 \begin{table}[htp]
   \centering
   \caption{实验环境配置} 
@@ -242,7 +241,7 @@
     显卡			  &NVIDIA  \\
     磁盘			  &1TB \\
     开发语言    &Python3.6 \\
-    主要工具和框架 &Pytorch1.10 \\
+    主要工具和框架 &Joern、Pytorch1.10 \\
   \bottomrule
   \end{tabular*}
 \end{table}
