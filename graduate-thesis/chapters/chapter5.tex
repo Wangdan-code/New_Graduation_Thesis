@@ -320,15 +320,25 @@
 
 （3）PDG表征可视化
 
-为了更直观地展示本文提出的图过滤的PDG表征学习方法的有效性，本文使用t-SNE技术将高维Token维度属性特征向量可视化。按照预先设定的参数，图表征学习后生成的张量维度是128，本实验采用t-SNE技术将128维的张量转换为2维，得到的样本表征结果如图\ref{fig:pdgresult}所示。
+为了更直观地展示本文提出的图过滤的PDG表征学习方法的有效性，本实验同样使用t-SNE技术将高维语义特征向量可视化。按照预先设定的参数，图表征学习后生成的张量维度是128，本实验采用t-SNE技术将128维的张量转换为2维，得到的样本表征结果如图\ref{fig:originthree}所示。
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\textwidth]{figures/token}
-  \caption{预训练辅助模型学习到的Token表征对比}\label{fig:pdgresult}
+\begin{figure}[H] 
+  \centering  %居中
+  \subfigure[初始向量可视化]{   %第一张子图
+      \centering    %子图居中
+      \includegraphics[width=0.45\textwidth]{figures/origin.png} 
+      \label{fig:originp} %引用标签
+  }
+  \subfigure[语义特征向量可视化]{ %第二张子图
+      \centering    %子图居中
+      \includegraphics[width=0.45\textwidth]{figures/origin3.png}
+      \label{fig:origin3} %引用标签
+  }p
+  \caption{t-SNE技术降维后的语义特征向量可视化结果}    %大图名称
+  \label{fig:originthree}    %图片引用标记
 \end{figure}
 
-分析上图，观察可视化结果，寻找可能的代码克隆群集。相似的代码片段在降维后的空间中应该更接近彼此。黑色代表label标签为1的样本，红色表示label标签为2的样本。经过训练，得到右图。
+如图\ref{fig:originthree}所示，\ref{fig:originp}和\ref{subsec:TokenResult}可视化实验中采用的代码片段相同，而\ref{fig:origin3}中，向量空间的所有点是代码片段通过图表征学习后得到的语义特征向量可视化结果。可以看到互为真克隆对的代码片段在经过图表征模型训练后语义更接近，距离更小。但是其中有一个绿色菱形与蓝色三角距离过近，探究其原因，可能是其代码片段虽然带有不同的标签，但生成的程序依赖图相似，在图表征后得到的语义特征向量距离过近，可视化结果来看，其距离更接近。
 
 \section{本章小结}
 \label{sec:Summary5}
