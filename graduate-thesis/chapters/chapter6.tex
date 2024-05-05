@@ -45,7 +45,7 @@
 
 \subsection{对比工具}
 
-为了更好地对比整个方法的实验效果，本文选取近几年来各个维度较为先进、经典开源的方法，并在相同数据集上进行了检测结果的对比，具体方法主要如表\ref{tab:tool}所示。
+为了更好地对比整个方法的实验效果，本文选取近几年来各个维度较为先进、经典开源的工具，并在相同数据集上进行了检测结果的对比，具体工具主要如表\ref{tab:tool}所示。
 
 \begin{table}[htp]
   \centering
@@ -105,7 +105,6 @@ SCDetector\cite{10.1145/3324884.3416562}：SCDetector一种是基于Token和图�
 
 （3）图维度的代码表征方法在代码克隆检测任务上的表现最差，三种指标均未超过90\%。深究其原因，可能是本文提出的基于图过滤的程序依赖图表征学习方法大大降低了图卷积神经网络模型的输入规模，数据量相比于基于Token的和基于树维度的表征方法少一个量级。当输入规模减少时，模型可能需要更长时间才能收敛到最优，同时模型可能无法充分学习数据的特征，影响下游任务表现。
 
-
 \subsection{RLCCD性能评估实验结果}
 
 本节回答RQ5，本文提出的RLCCD方法与现有代码克隆检测工具相比表现如何？为了回答这个问题，本实验RLCCD与Token维度方法SourcererCC、树维度方法ASTNN、图维度方法CCSharp、Token与图混合方法SCDetector进行对比，实验结果对比如表\ref{tab:RLCCD}所示。
@@ -114,15 +113,22 @@ SCDetector\cite{10.1145/3324884.3416562}：SCDetector一种是基于Token和图�
   \centering
   \caption{RLCCD性能评估实验结果}
   \label{tab:RLCCD}
-  \begin{tabular*}{0.9\textwidth}{@{\extracolsep{\fill}}cccc}
+  \begin{tabular*}{0.9\textwidth}{@{\extracolsep{\fill}}ccccc}
   \toprule
-    对比工具		& 准确率P(\%) & 召回率R(\%) & F1值(\%)  \\ 
+    维度 &对比工具		& 准确率P(\%) & 召回率R(\%) & F1值(\%)  \\ 
   \midrule
-    SourcererCC		& 11.23	  & 43.52		& 17.84 \\
-    ASTNN			    & 87.92		& 95.47		& 91.54 \\
-    CCSharp			  & 92.21	  & 52.13	  & 66.61 \\
-    SCDetector		& 97.02	  & 81.05		& 88.32 \\
-    RLCDD			    & 93.82		& 92.27		& 93.04  \\
+  \multirow{2}{*}{Token} & SourcererCC		& 11.23	  & 43.52		& 17.84 \\
+  & RLCCD\_Token    & 89.78	  & 95.62	  & 92.61	   \\ 
+  \cmidrule{2-5} 
+  \multirow{2}{*}{AST}   & ASTNN	        & 87.92		& 95.47		& 91.54 \\
+  & RLCCD\_AST      & 92.75	  & 87.62	  & 90.11   \\ 
+  \cmidrule{2-5} 
+  \multirow{2}{*}{PDG}   & CCSharp			  & 92.21	  & 52.13	  & 66.61 \\
+  & RLCCD\_PDG		  & 89.53		& 81.71		& 85.44   \\
+  \cmidrule{2-5} 
+  \multirow{3}{*}{多维度} & SCDetector		 & 97.02	 & 81.05	 & 88.32 \\
+  & RLCDD\_Add			& 92.89		& 90.35		& 91.60   \\
+  & RLCDD\_Concat		& 93.82		& 92.27		& 93.04  \\
   \bottomrule
   \end{tabular*}
 \end{table}
