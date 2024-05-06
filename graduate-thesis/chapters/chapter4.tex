@@ -322,11 +322,11 @@
 
 为了探究树表征模型GRU对实验结果的影响，本文在子树划分的基础上，将GRU模型与LSTM模型进行对比，结果如表\ref{tab:tree2}所示。
 
-其中，GRU、LSTM均基于Pytorch1.10实现，其参数设置为：\ding{172} 子树划分：采用AST-Block的划分方法。\ding{173} 子树的表征均采用基于树的卷积神经网络，整树的表征模型的隐藏层维度设置为128，模型使用二元交叉熵作为损失函数，使用Adam优化器来训练模型参数，其中，学习率Learning\_rate设置为0.001，Dropout为0.5，训练批次Epochs为50，批处理大小Batch\_size为32，
+其中，GRU、LSTM均基于Pytorch1.10实现，其参数设置为：
 \begin{table}[htp] 
   \centering  
   \caption{模型参数设置}   
-  \label{tab:parameter}  
+  \label{tab:parameter2}  
   %\renewcommand{\arraystretch}{1.1}
   \begin{tabular*}{0.9\textwidth}{@{\extracolsep{\fill}}ccc}  
   \toprule  
@@ -334,20 +334,13 @@
   \midrule
   子树划分 &策略 	& AST-Block	 \\
   \cmidrule{2-3} 
-  \multirow{9}{*}{树表征模型}   &子树表征模型 	& 基于树的卷积	 \\
+  \multirow{3}{*}{树表征模型}   &子树表征模型 	& 基于树的卷积	 \\
   & 整树表征模型	& BiGRU		\\
-  & 损失函数Loss	& BCELoss		\\
-  & 优化器Optimizer	& Adam		\\  
-  & 学习率lr	& 0.001		 \\  
-  & 丢弃概率Dropout	& 0.5		\\
-  & 训练轮次Epoch	& 50		\\
   & 批大小BatchSize	& 32	\\
-  & 阈值Threshold	& 0.5		\\
   \bottomrule  
   \end{tabular*}  
 \end{table}
 
-其中，阈值Threshold为0.5，当相似度超过0.5，输入的代码对被判定为真克隆对，否则被判定为假克隆对。参数的确定是通过多次调试后选择最优参数作为最后的结果。
 
 \begin{table}[htp]  
   \centering  
